@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Finished Product - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'inventory_list' %}">Inventory</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'finished_product_list' %}">Finished Products</a></li>
+                <li class="breadcrumb-item active">Delete Finished Product</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-trash-alt"></i> Delete Finished Product</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the finished product <strong>"{{ finished_product.name }}"</strong> ({{ finished_product.code }})?</p>
+
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. All associated inventory transactions will remain in the system but may become orphaned.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Yes, Delete Finished Product
+                    </button>
+                    <a href="{% url 'finished_product_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Finished Product Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Code:</dt>
+                    <dd class="col-sm-8">{{ finished_product.code }}</dd>
+
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">{{ finished_product.name }}</dd>
+
+                    <dt class="col-sm-4">Category:</dt>
+                    <dd class="col-sm-8">{{ finished_product.category.name }}</dd>
+
+                    <dt class="col-sm-4">Size:</dt>
+                    <dd class="col-sm-8">{{ finished_product.size }}</dd>
+
+                    <dt class="col-sm-4">Color:</dt>
+                    <dd class="col-sm-8">{{ finished_product.color }}</dd>
+
+                    <dt class="col-sm-4">Current Stock:</dt>
+                    <dd class="col-sm-8">{{ finished_product.current_stock }}</dd>
+
+                    <dt class="col-sm-4">Minimum Stock:</dt>
+                    <dd class="col-sm-8">{{ finished_product.minimum_stock }}</dd>
+
+                    <dt class="col-sm-4">Unit Price:</dt>
+                    <dd class="col-sm-8">${{ finished_product.unit_price }}</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        {% if finished_product.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

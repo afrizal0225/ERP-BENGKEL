@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{% if vendor %}Edit{% else %}Create{% endif %} Vendor - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-building"></i>
+                    {% if vendor %}Edit Vendor: {{ vendor.name }}{% else %}Create New Vendor{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% bootstrap_field form.code %}
+                        </div>
+                        <div class="col-md-6">
+                            {% bootstrap_field form.name %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% bootstrap_field form.contact_person %}
+                        </div>
+                        <div class="col-md-6">
+                            {% bootstrap_field form.phone %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% bootstrap_field form.email %}
+                        </div>
+                        <div class="col-md-6">
+                            {% bootstrap_field form.payment_terms %}
+                        </div>
+                    </div>
+
+                    {% bootstrap_field form.address %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% bootstrap_field form.credit_limit %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.is_active.id_for_label }}">Status</label>
+                                <div class="custom-control custom-switch">
+                                    {{ form.is_active }}
+                                    <label class="custom-control-label" for="{{ form.is_active.id_for_label }}">
+                                        {% if form.is_active.value %}Active{% else %}Inactive{% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% bootstrap_field form.notes %}
+
+                    <div class="form-group">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'vendor_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Vendors
+                            </a>
+                            <div>
+                                {% if vendor %}
+                                    <a href="{% url 'vendor_detail' vendor.pk %}" class="btn btn-info mr-2">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> {% if vendor %}Update{% else %}Create{% endif %} Vendor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if vendor %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Vendor Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4 class="text-primary">{{ vendor.total_orders }}</h4>
+                        <small class="text-muted">Total Orders</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-success">{{ vendor.on_time_delivery_rate|floatformat:1 }}%</h4>
+                        <small class="text-muted">On-Time Delivery</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-info">{{ vendor.quality_rating|floatformat:1 }}</h4>
+                        <small class="text-muted">Quality Rating</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-warning">${{ vendor.total_spent|floatformat:0 }}</h4>
+                        <small class="text-muted">Total Spent</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

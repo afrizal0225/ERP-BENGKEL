@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Purchase Dashboard - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-shopping-cart"></i> Purchase Management</h1>
+        <p class="lead">Manage vendors, purchase orders, and goods receipts</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ vendors_count }}</h5>
+                <p class="card-text">Active Vendors</p>
+                <a href="{% url 'vendor_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ active_pos }}</h5>
+                <p class="card-text">Active POs</p>
+                <a href="{% url 'purchase_order_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ overdue_pos }}</h5>
+                <p class="card-text">Overdue POs</p>
+                {% if overdue_pos > 0 %}
+                    <a href="{% url 'purchase_order_list' %}?status=overdue" class="btn btn-light btn-sm">View Overdue</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ goods_receipts_count|default:0 }}</h5>
+                <p class="card-text">Goods Receipts</p>
+                <a href="{% url 'goods_receipt_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'vendor_create' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-plus"></i> Add Vendor
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'purchase_order_create' %}" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-plus"></i> Create PO
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'goods_receipt_create' %}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-plus"></i> Goods Receipt
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'purchase_reports' %}" class="btn btn-outline-warning btn-block">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Purchase Orders -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Purchase Orders</h5>
+                <a href="{% url 'purchase_order_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Vendor</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in recent_pos %}
+                            <tr>
+                                <td><a href="{% url 'purchase_order_detail' po.pk %}">{{ po.po_number }}</a></td>
+                                <td>{{ po.vendor.name }}</td>
+                                <td>
+                                    <span class="badge badge-{% if po.status == 'approved' %}success{% elif po.status == 'pending_approval' %}warning{% elif po.status == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                                        {{ po.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>${{ po.total_amount }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-muted">No recent purchase orders</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Performing Vendors</h5>
+                <a href="{% url 'vendor_performance' %}" class="btn btn-sm btn-outline-success float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Vendor</th>
+                                <th>On-Time %</th>
+                                <th>Quality</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Top vendors would be populated here -->
+                            <tr>
+                                <td colspan="3" class="text-muted">No vendor performance data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+{% if user.userprofile.role == 'purchase_manager' or user.userprofile.role == 'admin' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock"></i> Pending Approvals
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Purchase orders awaiting your approval:</p>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Vendor</th>
+                                <th>Total Amount</th>
+                                <th>Expected Delivery</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Pending POs would be populated here -->
+                            <tr>
+                                <td colspan="5" class="text-muted">No pending approvals</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

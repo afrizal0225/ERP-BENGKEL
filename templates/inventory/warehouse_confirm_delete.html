@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Warehouse - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'inventory_list' %}">Inventory</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'warehouse_list' %}">Warehouses</a></li>
+                <li class="breadcrumb-item active">Delete Warehouse</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-trash-alt"></i> Delete Warehouse</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the warehouse <strong>"{{ warehouse.name }}"</strong>?</p>
+
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. All associated inventory transactions will remain in the system but may become orphaned.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Yes, Delete Warehouse
+                    </button>
+                    <a href="{% url 'warehouse_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Warehouse Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">{{ warehouse.name }}</dd>
+
+                    <dt class="col-sm-4">Location:</dt>
+                    <dd class="col-sm-8">{{ warehouse.location }}</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        {% if warehouse.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4">Created:</dt>
+                    <dd class="col-sm-8">{{ warehouse.created_at|date:"M d, Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

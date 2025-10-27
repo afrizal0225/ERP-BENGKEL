@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'work_order_list' %}">Work Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'work_order_detail' wo.pk %}">{{ wo.wo_number }}</a></li>
+                <li class="breadcrumb-item active">Record Progress</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-chart-line"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Update Progress
+                        </button>
+                        <a href="{% url 'work_order_detail' wo.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Work Order Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>WO Number:</strong> {{ wo.wo_number }}</p>
+                <p><strong>Stage:</strong> {{ wo.stage|title }}</p>
+                <p><strong>Quantity:</strong> {{ wo.quantity }}</p>
+                <p><strong>Current Progress:</strong> {{ wo.progress_percentage }}%</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Progress Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <p>Update the completion percentage for this work order.</p>
+                <ul class="small">
+                    <li>0% = Not started</li>
+                    <li>100% = Fully completed</li>
+                    <li>Add notes about current status</li>
+                    <li>Progress will be tracked over time</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

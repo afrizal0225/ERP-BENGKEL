@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_list' %}">Production Orders</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-plus"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Production Order
+                        </button>
+                        <a href="{% url 'production_order_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

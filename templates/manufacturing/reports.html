@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item active">Reports</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-chart-bar"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_pos }}</h5>
+                <p class="card-text">Total Production Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ completed_pos }}</h5>
+                <p class="card-text">Completed Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ active_pos }}</h5>
+                <p class="card-text">Active Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_work_orders }}</h5>
+                <p class="card-text">Total Work Orders</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Production Efficiency -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Production Efficiency</h5>
+            </div>
+            <div class="card-body">
+                {% if avg_completion_time %}
+                <p><strong>Average Completion Time:</strong> {{ avg_completion_time.days }} days</p>
+                {% else %}
+                <p><strong>Average Completion Time:</strong> No completed orders yet</p>
+                {% endif %}
+                <p><strong>Total Material Consumed:</strong> {{ total_consumed|floatformat:2 }} units</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Work Orders by Stage</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th>Total</th>
+                                <th>Completed</th>
+                                <th>In Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stage in stage_summary %}
+                            <tr>
+                                <td>{{ stage.stage|title }}</td>
+                                <td>{{ stage.total }}</td>
+                                <td>{{ stage.completed }}</td>
+                                <td>{{ stage.in_progress }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No work orders found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Production Orders</h5>
+                <a href="{% url 'production_order_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Product</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- This would be populated with recent POs in a real implementation -->
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No recent production orders.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Export Reports</h5>
+            </div>
+            <div class="card-body">
+                <p>Export manufacturing data for further analysis:</p>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary" disabled>
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                    <button class="btn btn-outline-danger" disabled>
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                    <button class="btn btn-outline-info" disabled>
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-2">Export functionality will be available in future updates.</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_list' %}">Production Orders</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-cogs"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-cogs"></i> Generate Work Orders
+                        </button>
+                        <a href="{% url 'production_order_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>How Work Orders are Generated</h5>
+            </div>
+            <div class="card-body">
+                <p>Work orders will be created for each production stage with the specified quantities:</p>
+                <ul>
+                    <li><strong>Gurat (Cutting):</strong> Initial cutting and preparation of materials</li>
+                    <li><strong>Assembly:</strong> Putting together the shoe components</li>
+                    <li><strong>Press:</strong> Pressing and molding operations</li>
+                    <li><strong>Finishing:</strong> Final touches, polishing, and quality checks</li>
+                </ul>
+                <div class="alert alert-info">
+                    <strong>Note:</strong> Only stages with quantities greater than 0 will have work orders created.
+                    The work orders will be scheduled sequentially based on the start date and duration specified.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

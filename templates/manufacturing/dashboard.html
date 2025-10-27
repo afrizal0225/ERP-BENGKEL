@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Manufacturing Dashboard - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-cogs"></i> Manufacturing Management</h1>
+        <p class="lead">Manage production orders, bills of materials, and work orders</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ active_pos }}</h5>
+                <p class="card-text">Active Production Orders</p>
+                <a href="{% url 'production_order_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ completed_pos }}</h5>
+                <p class="card-text">Completed Orders</p>
+                <a href="{% url 'production_order_list' %}?status=completed" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ overdue_pos }}</h5>
+                <p class="card-text">Overdue Orders</p>
+                {% if overdue_pos > 0 %}
+                    <a href="{% url 'production_order_list' %}?status=overdue" class="btn btn-light btn-sm">View Overdue</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ active_work_orders }}</h5>
+                <p class="card-text">Active Work Orders</p>
+                <a href="{% url 'work_order_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'production_order_create' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-plus"></i> Create Production Order
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'bill_of_materials_create' %}" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-list"></i> Create BOM
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'generate_work_orders' %}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-tasks"></i> Generate Work Orders
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'manufacturing_reports' %}" class="btn btn-outline-warning btn-block">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Production Stages Overview -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Production Stages Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th>Total</th>
+                                <th>Completed</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stage in stage_stats %}
+                            <tr>
+                                <td>
+                                    {% if stage.stage == 'gurat' %}Gurat (Cutting)
+                                    {% elif stage.stage == 'assembly' %}Assembly
+                                    {% elif stage.stage == 'press' %}Press
+                                    {% else %}Finishing{% endif %}
+                                </td>
+                                <td>{{ stage.count }}</td>
+                                <td>{{ stage.completed }}</td>
+                                <td>
+                                    {% if stage.count > 0 %}
+                                        {% widthratio stage.completed stage.count 100 as progress %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar"
+                                                 style="width: {{ progress }}%"
+                                                 aria-valuenow="{{ progress }}"
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                                {{ progress }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-muted">No work orders found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Production Orders</h5>
+                <a href="{% url 'production_order_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Product</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in recent_pos %}
+                            <tr>
+                                <td><a href="{% url 'production_order_detail' po.pk %}">{{ po.po_number }}</a></td>
+                                <td>{{ po.product.name }}</td>
+                                <td>
+                                    <span class="badge badge-{% if po.status == 'completed' %}success{% elif po.status == 'in_progress' %}primary{% elif po.status == 'approved' %}info{% else %}secondary{% endif %}">
+                                        {{ po.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ po.progress_percentage }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-muted">No recent production orders</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+{% if user.userprofile.role == 'production_manager' or user.userprofile.role == 'admin' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock"></i> Pending Approvals
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Production orders awaiting your approval:</p>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Planned Start</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Pending POs would be populated here -->
+                            <tr>
+                                <td colspan="5" class="text-muted">No pending approvals</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

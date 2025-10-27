@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'work_order_list' %}">Work Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'work_order_detail' wo.pk %}">{{ wo.wo_number }}</a></li>
+                <li class="breadcrumb-item active">Record Consumption</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-box"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Record Consumption
+                        </button>
+                        <a href="{% url 'work_order_detail' wo.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Work Order Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>WO Number:</strong> {{ wo.wo_number }}</p>
+                <p><strong>Stage:</strong> {{ wo.stage|title }}</p>
+                <p><strong>Quantity:</strong> {{ wo.quantity }}</p>
+                <p><strong>Product:</strong> {{ wo.production_order.product.name }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Material Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <p>Record the actual amount of material used in this work order stage.</p>
+                <ul class="small">
+                    <li>Planned quantity is based on BOM</li>
+                    <li>Actual quantity should reflect real usage</li>
+                    <li>Variance will be calculated automatically</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

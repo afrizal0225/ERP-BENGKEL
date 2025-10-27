@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'bill_of_materials_list' %}">BOMs</a></li>
+                <li class="breadcrumb-item active">{{ bom.product.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-list"></i> {{ title }}</h1>
+            <div>
+                <a href="{% url 'bill_of_materials_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to BOMs
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- BOM Header -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>BOM Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Product:</strong> {{ bom.product.name }}</p>
+                        <p><strong>Version:</strong> {{ bom.version }}</p>
+                        <p><strong>Status:</strong>
+                            {% if bom.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Created By:</strong> {{ bom.created_by.get_full_name|default:bom.created_by.username }}</p>
+                        <p><strong>Created At:</strong> {{ bom.created_at|date:"M d, Y H:i" }}</p>
+                        <p><strong>Total Cost:</strong> ${{ bom.total_cost|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Items Count:</strong> {{ bom.items.count }}</p>
+                <p><strong>Total Materials:</strong> {{ bom.items.all|length }}</p>
+                <p><strong>Last Updated:</strong> {{ bom.updated_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOM Items -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Bill of Materials Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                                <th>Unit Cost</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in bom.items.all %}
+                            <tr>
+                                <td>{{ item.material.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.material.unit }}</td>
+                                <td>${{ item.unit_cost|floatformat:2 }}</td>
+                                <td>${{ item.total_cost|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No items found in this BOM.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <th colspan="4">Total Cost</th>
+                                <th>${{ bom.total_cost|floatformat:2 }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Production Orders -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Related Production Orders</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Start Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in bom.product.production_orders.all %}
+                            <tr>
+                                <td>{{ po.po_number }}</td>
+                                <td>{{ po.quantity }}</td>
+                                <td>
+                                    {% if po.status == 'draft' %}
+                                        <span class="badge badge-secondary">Draft</span>
+                                    {% elif po.status == 'pending_approval' %}
+                                        <span class="badge badge-warning">Pending Approval</span>
+                                    {% elif po.status == 'approved' %}
+                                        <span class="badge badge-info">Approved</span>
+                                    {% elif po.status == 'in_progress' %}
+                                        <span class="badge badge-primary">In Progress</span>
+                                    {% elif po.status == 'completed' %}
+                                        <span class="badge badge-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{{ po.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ po.planned_start_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'production_order_detail' po.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No production orders found for this product.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

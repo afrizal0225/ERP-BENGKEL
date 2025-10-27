@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Raw Material - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'inventory_list' %}">Inventory</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'raw_material_list' %}">Raw Materials</a></li>
+                <li class="breadcrumb-item active">Delete Raw Material</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-trash-alt"></i> Delete Raw Material</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete the raw material <strong>"{{ raw_material.name }}"</strong> ({{ raw_material.code }})?</p>
+
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. All associated inventory transactions will remain in the system but may become orphaned.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Yes, Delete Raw Material
+                    </button>
+                    <a href="{% url 'raw_material_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Raw Material Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Code:</dt>
+                    <dd class="col-sm-8">{{ raw_material.code }}</dd>
+
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8">{{ raw_material.name }}</dd>
+
+                    <dt class="col-sm-4">Category:</dt>
+                    <dd class="col-sm-8">{{ raw_material.category.name }}</dd>
+
+                    <dt class="col-sm-4">Unit:</dt>
+                    <dd class="col-sm-8">{{ raw_material.unit }}</dd>
+
+                    <dt class="col-sm-4">Current Stock:</dt>
+                    <dd class="col-sm-8">{{ raw_material.current_stock }}</dd>
+
+                    <dt class="col-sm-4">Minimum Stock:</dt>
+                    <dd class="col-sm-8">{{ raw_material.minimum_stock }}</dd>
+
+                    <dt class="col-sm-4">Unit Price:</dt>
+                    <dd class="col-sm-8">${{ raw_material.unit_price }}</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        {% if raw_material.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

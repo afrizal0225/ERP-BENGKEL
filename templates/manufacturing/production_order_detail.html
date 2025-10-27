@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_list' %}">Production Orders</a></li>
+                <li class="breadcrumb-item active">{{ po.po_number }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-clipboard-list"></i> {{ title }}</h1>
+            <div>
+                {% if po.status == 'pending_approval' %}
+                <a href="{% url 'production_order_approve' po.pk %}" class="btn btn-success">
+                    <i class="fas fa-check"></i> Approve
+                </a>
+                {% endif %}
+                {% if po.status == 'approved' %}
+                <a href="{% url 'generate_work_orders' %}?po={{ po.pk }}" class="btn btn-primary">
+                    <i class="fas fa-cogs"></i> Generate Work Orders
+                </a>
+                {% endif %}
+                <a href="{% url 'production_order_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PO Status and Info -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Production Order Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>PO Number:</strong> {{ po.po_number }}</p>
+                        <p><strong>Product:</strong> {{ po.product.name }}</p>
+                        <p><strong>Quantity:</strong> {{ po.quantity }}</p>
+                        <p><strong>Priority:</strong>
+                            {% if po.priority == 'low' %}
+                                <span class="badge badge-info">Low</span>
+                            {% elif po.priority == 'medium' %}
+                                <span class="badge badge-warning">Medium</span>
+                            {% elif po.priority == 'high' %}
+                                <span class="badge badge-danger">High</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong>
+                            {% if po.status == 'draft' %}
+                                <span class="badge badge-secondary">Draft</span>
+                            {% elif po.status == 'pending_approval' %}
+                                <span class="badge badge-warning">Pending Approval</span>
+                            {% elif po.status == 'approved' %}
+                                <span class="badge badge-info">Approved</span>
+                            {% elif po.status == 'in_progress' %}
+                                <span class="badge badge-primary">In Progress</span>
+                            {% elif po.status == 'completed' %}
+                                <span class="badge badge-success">Completed</span>
+                            {% else %}
+                                <span class="badge badge-danger">{{ po.status|title }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Created By:</strong> {{ po.created_by.get_full_name|default:po.created_by.username }}</p>
+                        {% if po.approved_by %}
+                        <p><strong>Approved By:</strong> {{ po.approved_by.get_full_name|default:po.approved_by.username }}</p>
+                        {% endif %}
+                        <p><strong>Created At:</strong> {{ po.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Timeline</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Planned Start:</strong> {{ po.planned_start_date|date:"M d, Y" }}</p>
+                <p><strong>Planned End:</strong> {{ po.planned_end_date|date:"M d, Y" }}</p>
+                {% if po.actual_start_date %}
+                <p><strong>Actual Start:</strong> {{ po.actual_start_date|date:"M d, Y" }}</p>
+                {% endif %}
+                {% if po.actual_end_date %}
+                <p><strong>Actual End:</strong> {{ po.actual_end_date|date:"M d, Y" }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Work Orders -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Work Orders</h5>
+                {% if work_orders %}
+                <a href="{% url 'generate_work_orders' %}?po={{ po.pk }}" class="btn btn-sm btn-outline-primary float-right">
+                    <i class="fas fa-plus"></i> Generate More
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if work_orders %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>WO Number</th>
+                                <th>Stage</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Assigned To</th>
+                                <th>Progress</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for wo in work_orders %}
+                            <tr>
+                                <td>{{ wo.wo_number }}</td>
+                                <td>{{ wo.stage|title }}</td>
+                                <td>{{ wo.quantity }}</td>
+                                <td>
+                                    {% if wo.status == 'pending' %}
+                                        <span class="badge badge-secondary">Pending</span>
+                                    {% elif wo.status == 'in_progress' %}
+                                        <span class="badge badge-primary">In Progress</span>
+                                    {% elif wo.status == 'completed' %}
+                                        <span class="badge badge-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{{ wo.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ wo.assigned_to.get_full_name|default:wo.assigned_to.username if wo.assigned_to else '-' }}</td>
+                                <td>
+                                    <div class="progress" style="width: 80px;">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ wo.progress_percentage }}%">
+                                            {{ wo.progress_percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'work_order_detail' wo.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>No work orders generated yet.</p>
+                    {% if po.status == 'approved' %}
+                    <a href="{% url 'generate_work_orders' %}?po={{ po.pk }}" class="btn btn-primary">
+                        <i class="fas fa-cogs"></i> Generate Work Orders
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notes -->
+{% if po.notes %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Notes</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ po.notes }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

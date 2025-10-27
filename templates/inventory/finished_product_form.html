@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'inventory_list' %}">Inventory</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'finished_product_list' %}">Finished Products</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-shoe-prints"></i> {{ title }}</h1>
+            <a href="{% url 'finished_product_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Finished Products
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Finished Product
+                        </button>
+                        <a href="{% url 'finished_product_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Help</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Code:</strong> Unique identifier for the product.</p>
+                <p><strong>Name:</strong> Descriptive name of the finished product.</p>
+                <p><strong>Category:</strong> Product category for organization.</p>
+                <p><strong>Size:</strong> Shoe size (e.g., 7, 8, 9, 10).</p>
+                <p><strong>Color:</strong> Product color for identification.</p>
+                <p><strong>Current Stock:</strong> Current quantity in inventory.</p>
+                <p><strong>Minimum Stock:</strong> Threshold for low stock alerts.</p>
+                <p><strong>Unit Price:</strong> Selling price per unit.</p>
+            </div>
+        </div>
+
+        {% if finished_product %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Stock Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h4>{{ finished_product.current_stock }}</h4>
+                        <small class="text-muted">Current</small>
+                    </div>
+                    <div class="col-4">
+                        <h4>{{ finished_product.minimum_stock }}</h4>
+                        <small class="text-muted">Minimum</small>
+                    </div>
+                    <div class="col-4">
+                        {% if finished_product.stock_status == 'in_stock' %}
+                            <span class="badge badge-success badge-lg">In Stock</span>
+                        {% elif finished_product.stock_status == 'low_stock' %}
+                            <span class="badge badge-warning badge-lg">Low Stock</span>
+                        {% else %}
+                            <span class="badge badge-danger badge-lg">Out of Stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

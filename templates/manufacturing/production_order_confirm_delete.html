@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_list' %}">Production Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_detail' po.pk %}">{{ po.po_number }}</a></li>
+                <li class="breadcrumb-item active">Delete</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-trash"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Delete Production Order</h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete this production order?</p>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. The following data will be permanently deleted:
+                    <ul class="mb-0 mt-2">
+                        <li>Production Order: {{ po.po_number }}</li>
+                        <li>All associated work orders</li>
+                        <li>All material consumption records</li>
+                        <li>All production progress records</li>
+                    </ul>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>PO Details:</strong>
+                        <ul>
+                            <li>Product: {{ po.product.name }}</li>
+                            <li>Quantity: {{ po.quantity }}</li>
+                            <li>Status: {{ po.status|title }}</li>
+                            <li>Created: {{ po.created_at|date:"M d, Y H:i" }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Work Orders:</strong>
+                        {% if po.work_orders.exists %}
+                        <ul>
+                            {% for wo in po.work_orders.all %}
+                            <li>{{ wo.wo_number }} ({{ wo.stage|title }})</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">No work orders found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-block">
+                        <i class="fas fa-trash"></i> Yes, Delete Production Order
+                    </button>
+                    <a href="{% url 'production_order_detail' po.pk %}" class="btn btn-secondary btn-block">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
