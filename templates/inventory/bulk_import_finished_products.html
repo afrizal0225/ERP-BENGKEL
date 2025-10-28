@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Bulk Import Finished Products - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-upload"></i> Bulk Import Finished Products</h1>
+            <a href="{% url 'finished_product_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Upload Excel File</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Instructions:</h6>
+                    <ol>
+                        <li>Download the template file to see the required format</li>
+                        <li>Fill in your finished product data following the template structure</li>
+                        <li>Upload your completed Excel file (.xlsx format only)</li>
+                        <li>The system will validate and import your data</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Important Notes:</h6>
+                    <ul>
+                        <li>Size choices: 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45</li>
+                        <li>Color choices: black, white, brown, blue, red, green, yellow, gray, navy, beige</li>
+                        <li>Category must match existing ProductCategory names</li>
+                        <li>If a category doesn't exist, it will be created automatically</li>
+                        <li>Existing products with the same code will be updated</li>
+                        <li>Empty rows will be skipped</li>
+                    </ul>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="excel_file">Select Excel File (.xlsx)</label>
+                        <input type="file" class="form-control-file" id="excel_file" name="excel_file"
+                               accept=".xlsx" required>
+                        <small class="form-text text-muted">
+                            Only .xlsx files are supported. Maximum file size: 10MB
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-upload"></i> Import Products
+                        </button>
+                        <a href="{% url 'download_finished_product_template' %}" class="btn btn-outline-info ml-2">
+                            <i class="fas fa-download"></i> Download Template
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Template Preview</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">Your Excel file should have these columns:</p>
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Column</th>
+                            <th>Required</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Code</strong></td>
+                            <td>Yes</td>
+                            <td>FP001</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Name</strong></td>
+                            <td>Yes</td>
+                            <td>Running Shoes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Category</strong></td>
+                            <td>Yes</td>
+                            <td>Sports</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Size</strong></td>
+                            <td>Yes</td>
+                            <td>42</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Color</strong></td>
+                            <td>Yes</td>
+                            <td>black</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Description</strong></td>
+                            <td>No</td>
+                            <td>Comfortable shoes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Stock</strong></td>
+                            <td>No</td>
+                            <td>25</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Minimum Stock</strong></td>
+                            <td>No</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unit Price</strong></td>
+                            <td>No</td>
+                            <td>89.99</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

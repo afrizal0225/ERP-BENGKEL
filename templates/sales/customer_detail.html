@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'sales_list' %}">Sales</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'customer_list' %}">Customers</a></li>
+                <li class="breadcrumb-item active">{{ customer.name }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-user"></i> {{ title }}</h1>
+            <div>
+                <a href="{% url 'customer_update' customer.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit Customer
+                </a>
+                <a href="{% url 'customer_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Info -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> {{ customer.name }}</p>
+                        <p><strong>Email:</strong> {{ customer.email }}</p>
+                        <p><strong>Phone:</strong> {{ customer.phone|default:"-" }}</p>
+                        <p><strong>Type:</strong>
+                            {% if customer.customer_type == 'retail' %}
+                                <span class="badge badge-info">Retail</span>
+                            {% elif customer.customer_type == 'wholesale' %}
+                                <span class="badge badge-primary">Wholesale</span>
+                            {% elif customer.customer_type == 'distributor' %}
+                                <span class="badge badge-success">Distributor</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Online</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Credit Limit:</strong> ${{ customer.credit_limit|floatformat:0 }}</p>
+                        <p><strong>Payment Terms:</strong> {{ customer.payment_terms|title }}</p>
+                        <p><strong>Status:</strong>
+                            {% if customer.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Total Orders:</strong> {{ customer.total_orders }}</p>
+                    </div>
+                </div>
+
+                {% if customer.address %}
+                <div class="mt-3">
+                    <strong>Address:</strong><br>
+                    {{ customer.address }}<br>
+                    {% if customer.city %}{{ customer.city }}, {% endif %}
+                    {% if customer.state %}{{ customer.state }} {% endif %}
+                    {% if customer.postal_code %}{{ customer.postal_code }}{% endif %}
+                    {% if customer.country %}<br>{{ customer.country }}{% endif %}
+                </div>
+                {% endif %}
+
+                {% if customer.notes %}
+                <div class="mt-3">
+                    <strong>Notes:</strong>
+                    <p>{{ customer.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Customer Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Orders:</strong> {{ customer.total_orders }}</p>
+                <p><strong>Total Order Value:</strong> ${{ customer.total_order_value|floatformat:0 }}</p>
+                <p><strong>Average Order Value:</strong>
+                    {% if customer.total_orders > 0 %}
+                        ${{ customer.total_order_value|div:customer.total_orders|floatformat:0 }}
+                    {% else %}
+                        $0
+                    {% endif %}
+                </p>
+                <p><strong>Created:</strong> {{ customer.created_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Orders</h5>
+                <a href="{% url 'sales_order_create' %}?customer={{ customer.pk }}" class="btn btn-sm btn-outline-primary float-right">
+                    <i class="fas fa-plus"></i> New Order
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'sales_order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                                <td>{{ order.order_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if order.status == 'draft' %}
+                                        <span class="badge badge-secondary">Draft</span>
+                                    {% elif order.status == 'confirmed' %}
+                                        <span class="badge badge-info">Confirmed</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge badge-primary">Processing</span>
+                                    {% elif order.status == 'shipped' %}
+                                        <span class="badge badge-warning">Shipped</span>
+                                    {% elif order.status == 'delivered' %}
+                                        <span class="badge badge-success">Delivered</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{{ order.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ order.total_amount|floatformat:0 }}</td>
+                                <td>
+                                    <a href="{% url 'sales_order_detail' order.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>No orders found for this customer.</p>
+                    <a href="{% url 'sales_order_create' %}?customer={{ customer.pk }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create First Order
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

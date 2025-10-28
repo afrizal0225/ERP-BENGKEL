@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Submit for Approval - {{ po.po_number }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_list' %}">Production Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_detail' po.pk %}">{{ po.po_number }}</a></li>
+                <li class="breadcrumb-item active">Submit for Approval</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="fas fa-paper-plane"></i> Submit Production Order for Approval</h1>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> Confirmation Required</h5>
+                    <p>You are about to submit Production Order <strong>{{ po.po_number }}</strong> for approval.</p>
+                    <p>Once submitted, the production order will be sent to the approval queue and can no longer be edited until it is either approved or rejected.</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Production Order Details:</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>PO Number:</strong></td>
+                                <td>{{ po.po_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Product:</strong></td>
+                                <td>{{ po.product.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Quantity:</strong></td>
+                                <td>{{ po.quantity }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Priority:</strong></td>
+                                <td>
+                                    <span class="badge badge-{% if po.priority == 'urgent' %}danger{% elif po.priority == 'high' %}warning{% elif po.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                        {{ po.get_priority_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Planned Start:</strong></td>
+                                <td>{{ po.planned_start_date|date:"M d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Planned End:</strong></td>
+                                <td>{{ po.planned_end_date|date:"M d, Y" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Current Status:</h5>
+                        <div class="mb-3">
+                            <span class="badge badge-secondary badge-lg">{{ po.get_status_display }}</span>
+                        </div>
+                        <p><strong>Created By:</strong> {{ po.created_by.get_full_name|default:po.created_by.username }}</p>
+                        <p><strong>Created At:</strong> {{ po.created_at|date:"M d, Y H:i" }}</p>
+                        {% if po.notes %}
+                        <p><strong>Notes:</strong> {{ po.notes }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <p class="text-muted">
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                            This action cannot be undone. The production order will be submitted for approval and its status will change to "Pending Approval".
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane"></i> Submit for Approval
+                        </button>
+                        <a href="{% url 'production_order_detail' po.pk %}" class="btn btn-secondary btn-lg ml-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

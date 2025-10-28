@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Record Payment - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-credit-card"></i> Record Payment</h1>
+                <p class="lead">Record a payment for invoice {{ invoice.invoice_number }}</p>
+            </div>
+            <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Invoice
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Record Payment
+                        </button>
+                        <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-secondary ml-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Invoice Summary</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Invoice #:</dt>
+                    <dd class="col-sm-6">{{ invoice.invoice_number }}</dd>
+
+                    <dt class="col-sm-6">Customer:</dt>
+                    <dd class="col-sm-6">{{ invoice.sales_order.customer.name }}</dd>
+
+                    <dt class="col-sm-6">Total Amount:</dt>
+                    <dd class="col-sm-6"><strong>${{ invoice.total_amount|floatformat:2 }}</strong></dd>
+
+                    <dt class="col-sm-6">Amount Paid:</dt>
+                    <dd class="col-sm-6">${{ invoice.amount_paid|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-6">Balance Due:</dt>
+                    <dd class="col-sm-6"><strong class="text-danger">${{ invoice.balance_due|floatformat:2 }}</strong></dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Payment Status</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if invoice.payment_status == 'paid' %}
+                    <span class="badge badge-success badge-lg">PAID</span>
+                {% elif invoice.payment_status == 'partial' %}
+                    <span class="badge badge-warning badge-lg">PARTIALLY PAID</span>
+                {% elif invoice.payment_status == 'overdue' %}
+                    <span class="badge badge-danger badge-lg">OVERDUE</span>
+                {% else %}
+                    <span class="badge badge-secondary badge-lg">UNPAID</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

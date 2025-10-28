@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Financial Reports - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-chart-bar"></i> Financial Reports</h1>
+                <p class="lead">Generate and view financial statements</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Generation Form -->
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Generate Report</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-chart-bar"></i> Generate Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Available Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'trial_balance' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Trial Balance</h6>
+                        </div>
+                        <p class="mb-1">Check account balances and verify double-entry bookkeeping</p>
+                    </a>
+                    <a href="{% url 'balance_sheet' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Balance Sheet</h6>
+                        </div>
+                        <p class="mb-1">Assets, liabilities, and equity statement</p>
+                    </a>
+                    <a href="{% url 'income_statement' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Income Statement</h6>
+                        </div>
+                        <p class="mb-1">Revenue, expenses, and profit/loss analysis</p>
+                    </a>
+                    <a href="{% url 'cash_flow' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Cash Flow Statement</h6>
+                        </div>
+                        <p class="mb-1">Cash inflows and outflows analysis</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Export Options</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'export_trial_balance_csv' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-csv"></i> Export Trial Balance (CSV)
+                    </a>
+                    <button class="list-group-item list-group-item-action" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print Current Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Display Area -->
+{% if report_data %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Report Results</h5>
+            </div>
+            <div class="card-body">
+                <!-- Report content will be displayed here based on the selected report type -->
+                <div id="report-content">
+                    <!-- Dynamic content loaded via AJAX or form submission -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Report History -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Report Type</th>
+                                <th>Generated</th>
+                                <th>Parameters</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- This would be populated with actual report history in a real implementation -->
+                            <tr>
+                                <td>Trial Balance</td>
+                                <td>{{ now|date:"M d, Y H:i" }}</td>
+                                <td>All accounts, current period</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Export</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Balance Sheet</td>
+                                <td>{{ now|date:"M d, Y H:i" }}</td>
+                                <td>As of today</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Export</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Tips -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Report Generation Tips</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-lightbulb"></i> Best Practices</h6>
+                        <ul>
+                            <li>Generate reports at period-end for accurate financial statements</li>
+                            <li>Review trial balance before generating final reports</li>
+                            <li>Export reports regularly for record-keeping</li>
+                            <li>Use date filters to analyze specific periods</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-question-circle"></i> Understanding Reports</h6>
+                        <ul>
+                            <li><strong>Trial Balance:</strong> Verifies that debits equal credits</li>
+                            <li><strong>Balance Sheet:</strong> Snapshot of financial position</li>
+                            <li><strong>Income Statement:</strong> Performance over a period</li>
+                            <li><strong>Cash Flow:</strong> Cash movement analysis</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

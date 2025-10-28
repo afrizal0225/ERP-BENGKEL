@@ -106,10 +106,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Recent transactions would be populated here -->
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>
+                                    {% if transaction.transaction_type == 'IN' %}
+                                        <span class="badge badge-success">IN</span>
+                                    {% elif transaction.transaction_type == 'OUT' %}
+                                        <span class="badge badge-danger">OUT</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">{{ transaction.transaction_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.material_name }}</td>
+                                <td>{{ transaction.quantity }}</td>
+                                <td>{{ transaction.created_at|date:"M d, H:i" }}</td>
+                            </tr>
+                            {% empty %}
                             <tr>
                                 <td colspan="4" class="text-muted">No recent transactions</td>
                             </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -134,10 +150,24 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Low stock items would be populated here -->
+                            {% for item in low_stock_items %}
+                            <tr>
+                                <td>
+                                    {{ item.name }} ({{ item.code }})
+                                    <br><small class="text-muted">{{ item.type }}</small>
+                                </td>
+                                <td>
+                                    <span class="{% if item.current_stock == 0 %}text-danger font-weight-bold{% else %}text-warning{% endif %}">
+                                        {{ item.current_stock }}
+                                    </span>
+                                </td>
+                                <td>{{ item.minimum_stock }}</td>
+                            </tr>
+                            {% empty %}
                             <tr>
                                 <td colspan="3" class="text-muted">No low stock items</td>
                             </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

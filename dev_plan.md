@@ -1,6 +1,6 @@
 # ERP Shoe Production System - Development Plan
 
-## Phase 1: Foundation (2 weeks)
+## Phase 1: Foundation
 
 ### Week 1: Project Setup and Authentication
 - [ ] Set up Django project with virtual environment
@@ -23,7 +23,7 @@
 - [ ] Set up initial migrations
 - [ ] Create basic views and URLs for dashboard
 
-## Phase 2: Core Modules (6 weeks)
+## Phase 2: Core Modules
 
 ### Week 3-4: Inventory Module
 - [ ] Create inventory models (raw materials, finished products)
@@ -53,7 +53,7 @@
 - [ ] Create manufacturing reports and KPIs
 - [ ] Integrate with inventory for material allocation
 
-## Phase 3: Advanced Features (4 weeks)
+## Phase 3: Advanced Features
 
 ### Week 9-10: Sales Module
 - [ ] Create customer management system
@@ -82,7 +82,7 @@
 - [ ] Add real-time notifications and alerts
 - [ ] Performance optimization for reports
 
-## Phase 4: Testing & Deployment (2 weeks)
+## Phase 4: Testing & Deployment
 
 ### Week 15: Integration Testing
 - [ ] Test all module integrations

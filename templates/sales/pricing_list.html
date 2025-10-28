@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Product Pricing - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-tags"></i> Product Pricing</h1>
+                <p class="lead">Manage product pricing and discount policies</p>
+            </div>
+            <a href="{% url 'product_pricing_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Pricing
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Pricing Table -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Base Price</th>
+                                <th>Wholesale Price</th>
+                                <th>Retail Price</th>
+                                <th>Current Price</th>
+                                <th>Discount Eligible</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pricing in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong>{{ pricing.product.name }}</strong><br>
+                                    <small class="text-muted">{{ pricing.product.code }}</small>
+                                </td>
+                                <td>${{ pricing.base_price|floatformat:2 }}</td>
+                                <td>${{ pricing.wholesale_price|floatformat:2 }}</td>
+                                <td>${{ pricing.retail_price|floatformat:2 }}</td>
+                                <td><strong>${{ pricing.current_price|floatformat:2 }}</strong></td>
+                                <td>
+                                    {% if pricing.discount_eligible %}
+                                        <span class="badge badge-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ pricing.last_updated|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'product_pricing_update' pricing.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No pricing records found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="row mt-3">
+    <div class="col-12">
+        <nav aria-label="Pricing pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

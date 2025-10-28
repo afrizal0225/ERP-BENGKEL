@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'sales_list' %}">Sales</a></li>
+                <li class="breadcrumb-item active">Reports</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-chart-bar"></i> {{ title }}</h1>
+            <a href="{% url 'export_sales_report_csv' %}" class="btn btn-success">
+                <i class="fas fa-download"></i> Export CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_customers }}</h5>
+                <p class="card-text">Total Customers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_orders }}</h5>
+                <p class="card-text">Total Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ total_revenue|floatformat:0 }}</h5>
+                <p class="card-text">Total Revenue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ customer_sales.0.total_spent|default:0|floatformat:0 }}</h5>
+                <p class="card-text">Top Customer Value</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Sales Trend -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Monthly Sales Trend (Last 12 Months)</h5>
+            </div>
+            <div class="card-body">
+                {% if monthly_sales %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                                <th>Avg Order Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in monthly_sales %}
+                            <tr>
+                                <td>{{ month.month }}</td>
+                                <td>{{ month.count }}</td>
+                                <td>${{ month.total|floatformat:0 }}</td>
+                                <td>${{ month.total|div:month.count|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>No sales data available for the last 12 months.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Products and Customers -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Products by Revenue</h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Units Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>{{ product.product__name }}</td>
+                                <td>{{ product.total_quantity }}</td>
+                                <td>${{ product.total_revenue|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>No product sales data available.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Customers by Order Value</h5>
+            </div>
+            <div class="card-body">
+                {% if customer_sales %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in customer_sales %}
+                            <tr>
+                                <td>{{ customer.name }}</td>
+                                <td>{{ customer.order_count }}</td>
+                                <td>${{ customer.total_spent|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>No customer data available.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Analytics -->
+{% if sales_by_type %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Sales by Customer Type</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer Type</th>
+                                <th>Customers</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for type_data in sales_by_type %}
+                            <tr>
+                                <td>{{ type_data.customer_type|title }}</td>
+                                <td>{{ type_data.customer_count }}</td>
+                                <td>{{ type_data.total_orders }}</td>
+                                <td>${{ type_data.total_revenue|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Outstanding Invoices</h5>
+            </div>
+            <div class="card-body">
+                {% if outstanding_invoices %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in outstanding_invoices %}
+                            <tr>
+                                <td><a href="{% url 'invoice_detail' invoice.pk %}">{{ invoice.invoice_number }}</a></td>
+                                <td>{{ invoice.sales_order.customer.name }}</td>
+                                <td>{{ invoice.due_date }}</td>
+                                <td>${{ invoice.balance_due|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <p>No outstanding invoices.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Payment Status Summary -->
+{% if payment_summary %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Payment Status Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for status in payment_summary %}
+                    <div class="col-md-3">
+                        <div class="card text-center border-{{ status.payment_status }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ status.count }}</h5>
+                                <p class="card-text">{{ status.payment_status|title }} Invoices</p>
+                                <small class="text-muted">${{ status.total_amount|floatformat:0 }} total</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

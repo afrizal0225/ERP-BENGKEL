@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Bulk Process Orders - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-tasks"></i> Bulk Process Orders</h1>
+                <p class="lead">Process multiple sales orders at once</p>
+            </div>
+            <a href="{% url 'sales_order_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> This action will update the status of all selected orders.
+                        Make sure you have reviewed the orders before proceeding.
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-play"></i> Process Selected Orders
+                        </button>
+                        <a href="{% url 'sales_order_list' %}" class="btn btn-secondary ml-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Available Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Mark as Processing</h6>
+                        <p class="mb-1">Change order status to "Processing"</p>
+                        <small class="text-muted">Orders will be prepared for fulfillment</small>
+                    </div>
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Mark as Shipped</h6>
+                        <p class="mb-1">Change order status to "Shipped"</p>
+                        <small class="text-muted">Orders have been shipped to customers</small>
+                    </div>
+                    <div class="list-group-item">
+                        <h6 class="mb-1">Mark as Delivered</h6>
+                        <p class="mb-1">Change order status to "Delivered"</p>
+                        <small class="text-muted">Orders have been delivered successfully</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Order Status Flow</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress-steps">
+                    <div class="step">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Draft</div>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Confirmed</div>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Processing</div>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Shipped</div>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <div class="step-circle">5</div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+
+.step-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.step-label {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.step-arrow {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin: 0 5px;
+}
+</style>
+{% endblock %}

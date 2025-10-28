@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Chart of Accounts - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-list"></i> Chart of Accounts</h1>
+                <p class="lead">Manage financial accounts and balances</p>
+            </div>
+            <a href="{% url 'account_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Account
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Account Summary -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-success">{{ asset_count }}</h4>
+                            <p class="text-muted">Asset Accounts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-danger">{{ liability_count }}</h4>
+                            <p class="text-muted">Liability Accounts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-info">{{ equity_count }}</h4>
+                            <p class="text-muted">Equity Accounts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-warning">{{ revenue_count }}</h4>
+                            <p class="text-muted">Revenue Accounts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label for="type_filter" class="mr-2">Account Type:</label>
+                        <select name="type" id="type_filter" class="form-control">
+                            <option value="">All Types</option>
+                            <option value="asset" {% if request.GET.type == 'asset' %}selected{% endif %}>Asset</option>
+                            <option value="liability" {% if request.GET.type == 'liability' %}selected{% endif %}>Liability</option>
+                            <option value="equity" {% if request.GET.type == 'equity' %}selected{% endif %}>Equity</option>
+                            <option value="revenue" {% if request.GET.type == 'revenue' %}selected{% endif %}>Revenue</option>
+                            <option value="expense" {% if request.GET.type == 'expense' %}selected{% endif %}>Expense</option>
+                        </select>
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="status_filter" class="mr-2">Status:</label>
+                        <select name="status" id="status_filter" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary mr-2">Filter</button>
+                    <a href="{% url 'account_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accounts Table -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in page_obj %}
+                            <tr>
+                                <td><strong>{{ account.code }}</strong></td>
+                                <td>
+                                    {{ account.name }}
+                                    {% if account.parent_account %}
+                                    <br><small class="text-muted">Sub-account of: {{ account.parent_account.name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ account.account_type }}">
+                                        {{ account.get_account_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong class="{% if account.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ account.balance|floatformat:2 }}
+                                    </strong>
+                                </td>
+                                <td>
+                                    {% if account.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'account_detail' account.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="{% url 'account_update' account.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No accounts found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="row mt-3">
+    <div class="col-12">
+        <nav aria-label="Account pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

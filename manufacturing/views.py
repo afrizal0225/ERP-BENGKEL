@@ -60,8 +60,19 @@ def production_order_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Get status counts for summary cards
+    status_counts = ProductionOrder.objects.aggregate(
+        draft=Count('id', filter=Q(status='draft')),
+        pending_approval=Count('id', filter=Q(status='pending_approval')),
+        approved=Count('id', filter=Q(status='approved')),
+        in_progress=Count('id', filter=Q(status='in_progress')),
+        completed=Count('id', filter=Q(status='completed')),
+        cancelled=Count('id', filter=Q(status='cancelled')),
+    )
+
     context = {
         'page_obj': page_obj,
+        'status_counts': status_counts,
         'title': 'Production Orders'
     }
     return render(request, 'manufacturing/production_order_list.html', context)
@@ -104,6 +115,61 @@ def production_order_detail(request, pk):
         'title': f'Production Order: {po.po_number}'
     }
     return render(request, 'manufacturing/production_order_detail.html', context)
+
+
+@login_required
+def production_order_update(request, pk):
+    po = get_object_or_404(ProductionOrder, pk=pk)
+
+    # Only allow editing if status is draft or pending_approval
+    if po.status not in ['draft', 'pending_approval']:
+        messages.error(request, 'Cannot edit production order that has been processed.')
+        return redirect('production_order_detail', pk=pk)
+
+    if request.method == 'POST':
+        form = ProductionOrderForm(request.POST, instance=po)
+        if form.is_valid():
+            po = form.save()
+            messages.success(request, f'Production Order {po.po_number} updated successfully.')
+            return redirect('production_order_detail', pk=po.pk)
+    else:
+        form = ProductionOrderForm(instance=po)
+
+    context = {
+        'form': form,
+        'po': po,
+        'title': f'Update Production Order: {po.po_number}'
+    }
+    return render(request, 'manufacturing/production_order_form.html', context)
+
+
+@login_required
+def production_order_submit_approval(request, pk):
+    """Submit production order for approval (change status from draft to pending_approval)"""
+    po = get_object_or_404(ProductionOrder, pk=pk)
+
+    # Check user permissions (admin or production_manager)
+    if not (request.user.is_superuser or hasattr(request.user, 'userprofile') and
+            request.user.userprofile.role in ['admin', 'production_manager']):
+        messages.error(request, 'You do not have permission to submit production orders for approval.')
+        return redirect('production_order_detail', pk=pk)
+
+    # Only allow submission if status is draft
+    if po.status != 'draft':
+        messages.error(request, 'Only draft production orders can be submitted for approval.')
+        return redirect('production_order_detail', pk=pk)
+
+    if request.method == 'POST':
+        po.status = 'pending_approval'
+        po.save()
+        messages.success(request, f'Production Order {po.po_number} has been submitted for approval.')
+        return redirect('production_order_detail', pk=pk)
+
+    context = {
+        'po': po,
+        'title': f'Submit for Approval: {po.po_number}'
+    }
+    return render(request, 'manufacturing/production_order_submit_approval.html', context)
 
 
 @login_required
@@ -211,6 +277,54 @@ def bill_of_materials_detail(request, pk):
         'title': f'BOM: {bom.product.name} v{bom.version}'
     }
     return render(request, 'manufacturing/bom_detail.html', context)
+
+
+@login_required
+def bill_of_materials_update(request, pk):
+    bom = get_object_or_404(BillOfMaterials, pk=pk)
+
+    if request.method == 'POST':
+        form = BillOfMaterialsForm(request.POST, instance=bom)
+        formset = BOMItemFormSet(request.POST, instance=bom)
+
+        if form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                bom = form.save()
+                formset.save()
+
+                # Calculate total cost
+                bom.calculate_total_cost()
+
+                messages.success(request, f'BOM for {bom.product.name} updated successfully.')
+                return redirect('bill_of_materials_detail', pk=bom.pk)
+    else:
+        form = BillOfMaterialsForm(instance=bom)
+        formset = BOMItemFormSet(instance=bom)
+
+    context = {
+        'form': form,
+        'formset': formset,
+        'bom': bom,
+        'title': f'Update BOM: {bom.product.name} v{bom.version}'
+    }
+    return render(request, 'manufacturing/bom_form.html', context)
+
+
+@login_required
+def bill_of_materials_delete(request, pk):
+    bom = get_object_or_404(BillOfMaterials, pk=pk)
+
+    if request.method == 'POST':
+        product_name = bom.product.name
+        bom.delete()
+        messages.success(request, f'BOM for {product_name} deleted successfully.')
+        return redirect('bill_of_materials_list')
+
+    context = {
+        'bom': bom,
+        'title': f'Delete BOM: {bom.product.name} v{bom.version}'
+    }
+    return render(request, 'manufacturing/bom_confirm_delete.html', context)
 
 
 # Work Order Views

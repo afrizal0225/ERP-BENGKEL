@@ -1,123 +1,83 @@
-{% load bootstrap4 %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ERP Shoe Production System{% endblock %}</title>
-    {% bootstrap_css %}
-    {% bootstrap_javascript jquery='full' %}
-    <style>
-        .navbar-brand {
-            font-weight: bold;
-        }
-        .sidebar {
-            min-height: calc(100vh - 56px);
-        }
-        .content-wrapper {
-            padding: 20px;
-        }
-    </style>
+    <title>{% block title %}ERP Shoe Production{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">ERP Shoe Production</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <span class="navbar-text mr-3">Welcome, {{ user.get_full_name|default:user.username }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">ERP Shoe Production</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+                {% if user.is_authenticated %}
+                    {% if user.userprofile.role == 'admin' or user.userprofile.role == 'inventory_manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'inventory_list' %}">Inventory</a>
+                    </li>
                     {% endif %}
-                </ul>
-            </div>
+                    {% if user.userprofile.role == 'admin' or user.userprofile.role == 'purchase_manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'purchase_list' %}">Purchase</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'admin' or user.userprofile.role == 'manufacturing_manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manufacturing_list' %}">Manufacturing</a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'admin' or user.userprofile.role == 'sales_manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'sales_list' %}">
+                            <i class="fas fa-chart-line"></i> Sales
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.userprofile.role == 'admin' or user.userprofile.role == 'finance_manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'finance_dashboard' %}">Finance</a>
+                    </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{ user.username }}
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-menu-item" href="{% url 'logout' %}">Logout</a>
+                    </div>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
     </nav>
 
-    <div class="container-fluid">
-        <div class="row">
-            {% if user.is_authenticated %}
-            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-                <div class="sidebar-sticky">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                        </li>
-                        {% if user.userprofile.role == 'admin' or user.userprofile.role == 'production_manager' or user.userprofile.role == 'purchase_manager' or user.userprofile.role == 'warehouse_staff' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'inventory_list' %}">
-                                <i class="fas fa-boxes"></i> Inventory
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'admin' or user.userprofile.role == 'purchase_manager' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'purchase_list' %}">
-                                <i class="fas fa-shopping-cart"></i> Purchase
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'admin' or user.userprofile.role == 'warehouse_staff' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'inventory_list' %}">
-                                <i class="fas fa-boxes"></i> Inventory
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'admin' or user.userprofile.role == 'production_manager' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'manufacturing_list' %}">
-                                <i class="fas fa-cogs"></i> Manufacturing
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'admin' or user.userprofile.role == 'sales_manager' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-chart-line"></i> Sales
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'admin' or user.userprofile.role == 'finance_manager' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-dollar-sign"></i> Finance
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% if user.userprofile.role == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'admin:index' %}">
-                                <i class="fas fa-user-shield"></i> Admin
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </nav>
-            {% endif %}
-
-            <main class="col-md-{% if user.is_authenticated %}10{% else %}12{% endif %} content-wrapper">
-                {% bootstrap_messages %}
-                {% block content %}{% endblock %}
-            </main>
-        </div>
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
     </div>
 
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

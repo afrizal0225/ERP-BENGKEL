@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'sales_list' %}">Sales</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales_order_list' %}">Orders</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-plus"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <hr>
+                    <h5>Order Items</h5>
+                    {{ formset.management_form }}
+                    <div id="order-items">
+                        {% for form in formset %}
+                        <div class="order-item card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        {% bootstrap_field form.product %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% bootstrap_field form.quantity %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% bootstrap_field form.unit_price %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% bootstrap_field form.discount_percent %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-danger btn-sm remove-item">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="add-item">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                    <hr>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Sales Order
+                        </button>
+                        <a href="{% url 'sales_order_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add new order item
+    $('#add-item').click(function() {
+        var itemCount = $('.order-item').length;
+        var newItem = `
+            <div class="order-item card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select name="salesorderitem_set-${itemCount}-product" class="form-control">
+                                <option value="">Select Product</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" name="salesorderitem_set-${itemCount}-quantity" class="form-control" min="1" placeholder="Quantity">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" name="salesorderitem_set-${itemCount}-unit_price" class="form-control" step="0.01" placeholder="Unit Price">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" name="salesorderitem_set-${itemCount}-discount_percent" class="form-control" step="0.01" max="100" placeholder="Discount %">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm remove-item">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#order-items').append(newItem);
+    });
+
+    // Remove order item
+    $(document).on('click', '.remove-item', function() {
+        $(this).closest('.order-item').remove();
+    });
+});
+</script>
+{% endblock %}

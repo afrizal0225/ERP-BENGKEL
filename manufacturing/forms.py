@@ -98,10 +98,17 @@ class MaterialConsumptionForm(forms.ModelForm):
 
         if work_order:
             # Filter materials to those in the BOM for this production order
-            bom = work_order.production_order.product.bill_of_materials.filter(is_active=True).first()
-            if bom:
-                material_ids = bom.items.values_list('material_id', flat=True)
-                self.fields['material'].queryset = RawMaterial.objects.filter(id__in=material_ids)
+            try:
+                bom = work_order.production_order.product.bill_of_materials.filter(is_active=True).first()
+                if bom:
+                    material_ids = bom.items.values_list('material_id', flat=True)
+                    self.fields['material'].queryset = RawMaterial.objects.filter(id__in=material_ids)
+            except AttributeError:
+                # If bill_of_materials is a single object (OneToOneField), not a manager
+                bom = work_order.production_order.product.bill_of_materials
+                if bom and bom.is_active:
+                    material_ids = bom.items.values_list('material_id', flat=True)
+                    self.fields['material'].queryset = RawMaterial.objects.filter(id__in=material_ids)
 
 
 class ProductionProgressForm(forms.ModelForm):

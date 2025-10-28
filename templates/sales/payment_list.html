@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Payments - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-credit-card"></i> Payments</h1>
+                <p class="lead">Payment records and transaction history</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label for="method_filter" class="mr-2">Method:</label>
+                        <select name="method" id="method_filter" class="form-control">
+                            <option value="">All Methods</option>
+                            <option value="cash" {% if request.GET.method == 'cash' %}selected{% endif %}>Cash</option>
+                            <option value="bank_transfer" {% if request.GET.method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                            <option value="credit_card" {% if request.GET.method == 'credit_card' %}selected{% endif %}>Credit Card</option>
+                            <option value="check" {% if request.GET.method == 'check' %}selected{% endif %}>Check</option>
+                        </select>
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="date_from" class="mr-2">From:</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="date_to" class="mr-2">To:</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary mr-2">Filter</button>
+                    <a href="{% url 'payment_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payments Table -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Recorded By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in page_obj %}
+                            <tr>
+                                <td>{{ payment.payment_date }}</td>
+                                <td><a href="{% url 'invoice_detail' payment.invoice.pk %}">{{ payment.invoice.invoice_number }}</a></td>
+                                <td>{{ payment.invoice.sales_order.customer.name }}</td>
+                                <td>${{ payment.amount|floatformat:2 }}</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.reference_number|default:"-" }}</td>
+                                <td>{{ payment.created_by.get_full_name|default:payment.created_by.username }}</td>
+                                <td>
+                                    <a href="{% url 'payment_detail' payment.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No payments found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="row mt-3">
+    <div class="col-12">
+        <nav aria-label="Payment pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.method %}&method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.method %}&method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.method %}&method={{ request.GET.method }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

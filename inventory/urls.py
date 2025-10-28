@@ -32,4 +32,10 @@ urlpatterns = [
 
     # Stock Alert URLs
     path('stock-alerts/', views.stock_alert_list, name='stock_alert_list'),
+
+    # Bulk Import URLs
+    path('raw-materials/bulk-import/', views.bulk_import_raw_materials, name='bulk_import_raw_materials'),
+    path('finished-products/bulk-import/', views.bulk_import_finished_products, name='bulk_import_finished_products'),
+    path('raw-materials/template/', views.download_raw_material_template, name='download_raw_material_template'),
+    path('finished-products/template/', views.download_finished_product_template, name='download_finished_product_template'),
 ]

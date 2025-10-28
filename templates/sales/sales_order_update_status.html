@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'sales_list' %}">Sales</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales_order_list' %}">Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales_order_detail' order.pk %}">{{ order.order_number }}</a></li>
+                <li class="breadcrumb-item active">Update Status</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-edit"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Status
+                        </button>
+                        <a href="{% url 'sales_order_detail' order.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Order Details</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Order:</strong> {{ order.order_number }}</p>
+                <p><strong>Customer:</strong> {{ order.customer.name }}</p>
+                <p><strong>Current Status:</strong>
+                    {% if order.status == 'draft' %}
+                        <span class="badge badge-secondary">Draft</span>
+                    {% elif order.status == 'confirmed' %}
+                        <span class="badge badge-info">Confirmed</span>
+                    {% elif order.status == 'processing' %}
+                        <span class="badge badge-primary">Processing</span>
+                    {% elif order.status == 'shipped' %}
+                        <span class="badge badge-warning">Shipped</span>
+                    {% elif order.status == 'delivered' %}
+                        <span class="badge badge-success">Delivered</span>
+                    {% else %}
+                        <span class="badge badge-danger">{{ order.status|title }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Total:</strong> ${{ order.total_amount|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Status Flow</h5>
+            </div>
+            <div class="card-body">
+                <ol class="small">
+                    <li><strong>Draft:</strong> Order created, not confirmed</li>
+                    <li><strong>Confirmed:</strong> Order confirmed by customer</li>
+                    <li><strong>Processing:</strong> Order being prepared</li>
+                    <li><strong>Shipped:</strong> Order has been shipped</li>
+                    <li><strong>Delivered:</strong> Order delivered to customer</li>
+                    <li><strong>Cancelled:</strong> Order cancelled</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

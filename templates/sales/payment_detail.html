@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Payment Details - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-credit-card"></i> Payment Details</h1>
+                <p class="lead">Payment of ${{ payment.amount|floatformat:2 }}</p>
+            </div>
+            <div>
+                <a href="{% url 'payment_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Payments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Payment Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Payment Date:</dt>
+                    <dd class="col-sm-8">{{ payment.payment_date }}</dd>
+
+                    <dt class="col-sm-4">Amount:</dt>
+                    <dd class="col-sm-8"><strong class="text-success">${{ payment.amount|floatformat:2 }}</strong></dd>
+
+                    <dt class="col-sm-4">Payment Method:</dt>
+                    <dd class="col-sm-8">{{ payment.get_payment_method_display }}</dd>
+
+                    <dt class="col-sm-4">Reference Number:</dt>
+                    <dd class="col-sm-8">{{ payment.reference_number|default:"-" }}</dd>
+
+                    <dt class="col-sm-4">Recorded By:</dt>
+                    <dd class="col-sm-8">{{ payment.created_by.get_full_name|default:payment.created_by.username }}</dd>
+
+                    <dt class="col-sm-4">Recorded On:</dt>
+                    <dd class="col-sm-8">{{ payment.created_at }}</dd>
+                </dl>
+
+                {% if payment.notes %}
+                <div class="mt-3">
+                    <h6>Notes:</h6>
+                    <p>{{ payment.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Related Invoice</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Invoice #:</dt>
+                    <dd class="col-sm-7"><a href="{% url 'invoice_detail' payment.invoice.pk %}">{{ payment.invoice.invoice_number }}</a></dd>
+
+                    <dt class="col-sm-5">Customer:</dt>
+                    <dd class="col-sm-7">{{ payment.invoice.sales_order.customer.name }}</dd>
+
+                    <dt class="col-sm-5">Order #:</dt>
+                    <dd class="col-sm-7"><a href="{% url 'sales_order_detail' payment.invoice.sales_order.pk %}">{{ payment.invoice.sales_order.order_number }}</a></dd>
+
+                    <dt class="col-sm-5">Invoice Total:</dt>
+                    <dd class="col-sm-7">${{ payment.invoice.total_amount|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5">Amount Paid:</dt>
+                    <dd class="col-sm-7">${{ payment.invoice.amount_paid|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5">Balance Due:</dt>
+                    <dd class="col-sm-7">${{ payment.invoice.balance_due|floatformat:2 }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Invoice Status</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if payment.invoice.payment_status == 'paid' %}
+                    <span class="badge badge-success badge-lg">PAID</span>
+                {% elif payment.invoice.payment_status == 'partial' %}
+                    <span class="badge badge-warning badge-lg">PARTIALLY PAID</span>
+                {% elif payment.invoice.payment_status == 'overdue' %}
+                    <span class="badge badge-danger badge-lg">OVERDUE</span>
+                {% else %}
+                    <span class="badge badge-secondary badge-lg">UNPAID</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

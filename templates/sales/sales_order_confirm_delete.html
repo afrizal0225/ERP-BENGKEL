@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'sales_list' %}">Sales</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales_order_list' %}">Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'sales_order_detail' order.pk %}">{{ order.order_number }}</a></li>
+                <li class="breadcrumb-item active">Delete</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-trash"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Delete Sales Order</h5>
+            </div>
+            <div class="card-body">
+                <p>Are you sure you want to delete this sales order?</p>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This action cannot be undone. The following data will be permanently deleted:
+                    <ul class="mb-0 mt-2">
+                        <li>Sales Order: {{ order.order_number }}</li>
+                        <li>All order items ({{ order.total_items }} items)</li>
+                        {% if order.invoice %}
+                        <li>Associated invoice: {{ order.invoice.invoice_number }}</li>
+                        <li>All payment records for this invoice</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Order Details:</strong>
+                        <ul>
+                            <li>Customer: {{ order.customer.name }}</li>
+                            <li>Order Date: {{ order.order_date|date:"M d, Y" }}</li>
+                            <li>Status: {{ order.status|title }}</li>
+                            <li>Total Amount: ${{ order.total_amount|floatformat:2 }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Order Items:</strong>
+                        {% if order.items.all %}
+                        <ul>
+                            {% for item in order.items.all %}
+                            <li>{{ item.product.name }} - {{ item.quantity }} units</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">No items found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Yes, Delete Sales Order
+            </button>
+            <a href="{% url 'sales_order_detail' order.pk %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

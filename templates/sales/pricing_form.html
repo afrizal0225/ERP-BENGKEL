@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{% if pricing %}Update{% else %}Create{% endif %} Product Pricing - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-tags"></i> {% if pricing %}Update{% else %}Create{% endif %} Product Pricing</h1>
+                {% if pricing %}
+                <p class="lead">Update pricing for {{ pricing.product.name }}</p>
+                {% else %}
+                <p class="lead">Set pricing for a product</p>
+                {% endif %}
+            </div>
+            <a href="{% url 'product_pricing_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Pricing
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% if pricing %}Update{% else %}Create{% endif %} Pricing
+                        </button>
+                        <a href="{% url 'product_pricing_list' %}" class="btn btn-secondary ml-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if pricing %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Current Pricing</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Product:</dt>
+                    <dd class="col-sm-6">{{ pricing.product.name }}</dd>
+
+                    <dt class="col-sm-6">Base Price:</dt>
+                    <dd class="col-sm-6">${{ pricing.base_price|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-6">Wholesale:</dt>
+                    <dd class="col-sm-6">${{ pricing.wholesale_price|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-6">Retail:</dt>
+                    <dd class="col-sm-6">${{ pricing.retail_price|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-6">Current:</dt>
+                    <dd class="col-sm-6"><strong>${{ pricing.current_price|floatformat:2 }}</strong></dd>
+
+                    <dt class="col-sm-6">Discount Eligible:</dt>
+                    <dd class="col-sm-6">
+                        {% if pricing.discount_eligible %}
+                            <span class="badge badge-success">Yes</span>
+                        {% else %}
+                            <span class="badge badge-secondary">No</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-6">Max Discount:</dt>
+                    <dd class="col-sm-6">{{ pricing.max_discount_percent }}%</dd>
+                </dl>
+            </div>
+        </div>
+
+        {% if pricing.seasonal_price %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Seasonal Pricing</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Seasonal Price:</dt>
+                    <dd class="col-sm-6">${{ pricing.seasonal_price|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-6">Start Date:</dt>
+                    <dd class="col-sm-6">{{ pricing.seasonal_start_date }}</dd>
+
+                    <dt class="col-sm-6">End Date:</dt>
+                    <dd class="col-sm-6">{{ pricing.seasonal_end_date }}</dd>
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

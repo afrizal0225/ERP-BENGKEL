@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{% if invoice %}Update{% else %}Create{% endif %} Invoice - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-file-invoice"></i> {% if invoice %}Update{% else %}Create{% endif %} Invoice</h1>
+                {% if invoice %}
+                <p class="lead">Update invoice {{ invoice.invoice_number }}</p>
+                {% else %}
+                <p class="lead">Create a new invoice for sales order</p>
+                {% endif %}
+            </div>
+            <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Invoices
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% if invoice %}Update{% else %}Create{% endif %} Invoice
+                        </button>
+                        <a href="{% url 'invoice_list' %}" class="btn btn-secondary ml-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if order %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Sales Order Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Order #:</dt>
+                    <dd class="col-sm-7">{{ order.order_number }}</dd>
+
+                    <dt class="col-sm-5">Customer:</dt>
+                    <dd class="col-sm-7">{{ order.customer.name }}</dd>
+
+                    <dt class="col-sm-5">Order Date:</dt>
+                    <dd class="col-sm-7">{{ order.order_date }}</dd>
+
+                    <dt class="col-sm-5">Status:</dt>
+                    <dd class="col-sm-7">
+                        {% if order.status == 'delivered' %}
+                            <span class="badge badge-success">{{ order.status|title }}</span>
+                        {% else %}
+                            <span class="badge badge-warning">{{ order.status|title }}</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-5">Subtotal:</dt>
+                    <dd class="col-sm-7">${{ order.subtotal|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5">Tax:</dt>
+                    <dd class="col-sm-7">${{ order.tax_amount|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5">Discount:</dt>
+                    <dd class="col-sm-7">${{ order.discount_amount|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5">Shipping:</dt>
+                    <dd class="col-sm-7">${{ order.shipping_cost|floatformat:2 }}</dd>
+
+                    <dt class="col-sm-5"><strong>Total:</strong></dt>
+                    <dd class="col-sm-7"><strong>${{ order.total_amount|floatformat:2 }}</strong></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

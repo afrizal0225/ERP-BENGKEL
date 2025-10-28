@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Trial Balance - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-balance-scale"></i> Trial Balance</h1>
+                <p class="lead">Account balances verification report</p>
+            </div>
+            <div>
+                <a href="{% url 'export_trial_balance_csv' %}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+                <button onclick="window.print()" class="btn btn-info ml-2">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <a href="{% url 'financial_reports' %}" class="btn btn-secondary ml-2">
+                    <i class="fas fa-arrow-left"></i> Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Info -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Report Date:</dt>
+                            <dd class="col-sm-8">{{ now|date:"F d, Y" }}</dd>
+
+                            {% if start_date %}
+                            <dt class="col-sm-4">Start Date:</dt>
+                            <dd class="col-sm-8">{{ start_date }}</dd>
+                            {% endif %}
+
+                            {% if end_date %}
+                            <dt class="col-sm-4">End Date:</dt>
+                            <dd class="col-sm-8">{{ end_date }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6>Trial Balance Summary</h6>
+                            <p class="mb-1">Total Debit: <strong>${{ total_debit|floatformat:2 }}</strong></p>
+                            <p class="mb-1">Total Credit: <strong>${{ total_credit|floatformat:2 }}</strong></p>
+                            {% if total_debit == total_credit %}
+                            <p class="text-success mb-0"><i class="fas fa-check-circle"></i> Balances are equal</p>
+                            {% else %}
+                            <p class="text-danger mb-0"><i class="fas fa-exclamation-triangle"></i> Out of balance!</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trial Balance Table -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Account Code</th>
+                                <th>Account Name</th>
+                                <th>Account Type</th>
+                                <th class="text-right">Debit Balance</th>
+                                <th class="text-right">Credit Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in trial_balance_data %}
+                            <tr>
+                                <td><strong>{{ item.account.code }}</strong></td>
+                                <td>{{ item.account.name }}</td>
+                                <td>
+                                    <span class="badge badge-{{ item.account.account_type }}">
+                                        {{ item.account.get_account_type_display }}
+                                    </span>
+                                </td>
+                                <td class="text-right text-danger">
+                                    {% if item.debit > 0 %}
+                                        ${{ item.debit|floatformat:2 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-right text-success">
+                                    {% if item.credit > 0 %}
+                                        ${{ item.credit|floatformat:2 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No account balances found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="font-weight-bold">
+                            <tr class="table-dark">
+                                <td colspan="3" class="text-right">TOTALS:</td>
+                                <td class="text-right text-danger">${{ total_debit|floatformat:2 }}</td>
+                                <td class="text-right text-success">${{ total_credit|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Notes -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>About Trial Balance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>What is a Trial Balance?</h6>
+                        <p>A trial balance is a report that lists the balances of all general ledger accounts at a specific point in time. It ensures that the total of all debit balances equals the total of all credit balances, which is fundamental to double-entry bookkeeping.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>How to Use This Report</h6>
+                        <ul>
+                            <li>Verify that debit and credit totals are equal</li>
+                            <li>Identify any accounts with unexpected balances</li>
+                            <li>Use as a basis for preparing financial statements</li>
+                            <li>Check for mathematical accuracy in bookkeeping</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header .btn, nav, .alert {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .table-responsive {
+        overflow: visible !important;
+    }
+}
+</style>
+{% endblock %}

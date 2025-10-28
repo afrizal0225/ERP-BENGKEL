@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Finance Dashboard - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-calculator"></i> Finance Management</h1>
+        <p class="lead">Financial accounting, reporting, and analysis</p>
+    </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ asset_total|floatformat:0 }}</h5>
+                <p class="card-text">Total Assets</p>
+                <a href="{% url 'account_list' %}?type=asset" class="btn btn-light btn-sm">View Assets</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-danger text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ liability_total|floatformat:0 }}</h5>
+                <p class="card-text">Total Liabilities</p>
+                <a href="{% url 'account_list' %}?type=liability" class="btn btn-light btn-sm">View Liabilities</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ equity_total|floatformat:0 }}</h5>
+                <p class="card-text">Total Equity</p>
+                <a href="{% url 'account_list' %}?type=equity" class="btn btn-light btn-sm">View Equity</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ net_worth|floatformat:0 }}</h5>
+                <p class="card-text">Net Worth</p>
+                <a href="{% url 'financial_reports' %}" class="btn btn-light btn-sm">View Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'account_create' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-plus"></i> Add Account
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'journal_entry_create' %}" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-book"></i> Journal Entry
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'transaction_create' %}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-exchange-alt"></i> Record Transaction
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'financial_reports' %}" class="btn btn-outline-warning btn-block">
+                            <i class="fas fa-chart-bar"></i> Financial Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Period and Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Current Financial Period</h5>
+            </div>
+            <div class="card-body">
+                {% if current_period %}
+                <dl class="row">
+                    <dt class="col-sm-5">Period:</dt>
+                    <dd class="col-sm-7">{{ current_period.name }}</dd>
+
+                    <dt class="col-sm-5">Start Date:</dt>
+                    <dd class="col-sm-7">{{ current_period.start_date }}</dd>
+
+                    <dt class="col-sm-5">End Date:</dt>
+                    <dd class="col-sm-7">{{ current_period.end_date }}</dd>
+
+                    <dt class="col-sm-5">Status:</dt>
+                    <dd class="col-sm-7">
+                        {% if current_period.is_closed %}
+                            <span class="badge badge-danger">Closed</span>
+                        {% else %}
+                            <span class="badge badge-success">Open</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+                {% else %}
+                <p class="text-muted">No current financial period set.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Transactions</h5>
+                <a href="{% url 'transaction_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.date }}</td>
+                                <td>{{ transaction.description|truncatechars:30 }}</td>
+                                <td>{{ transaction.account.name|truncatechars:20 }}</td>
+                                <td>
+                                    {% if transaction.transaction_type == 'debit' %}
+                                        <span class="text-danger">-${{ transaction.amount|floatformat:0 }}</span>
+                                    {% else %}
+                                        <span class="text-success">+${{ transaction.amount|floatformat:0 }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No recent transactions</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Budgets -->
+{% if active_budgets %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Active Budgets</h5>
+                <a href="{% url 'budget_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for budget in active_budgets %}
+                    <div class="col-md-4">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ budget.name }}</h6>
+                                <p class="card-text">{{ budget.start_date }} to {{ budget.end_date }}</p>
+                                <a href="{% url 'budget_detail' budget.pk %}" class="btn btn-sm btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Financial Health Indicators -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Financial Health Indicators</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-balance-scale"></i> Balance Sheet</h6>
+                            <p>Assets vs Liabilities analysis</p>
+                            <a href="{% url 'balance_sheet' %}" class="btn btn-sm btn-info">View Balance Sheet</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-chart-line"></i> Profit & Loss</h6>
+                            <p>Revenue and expense analysis</p>
+                            <a href="{% url 'income_statement' %}" class="btn btn-sm btn-success">View P&L</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-file-export"></i> Export Reports</h6>
+                            <p>Download financial reports</p>
+                            <a href="{% url 'export_trial_balance_csv' %}" class="btn btn-sm btn-warning">Export CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

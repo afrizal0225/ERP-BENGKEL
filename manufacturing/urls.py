@@ -9,6 +9,8 @@ urlpatterns = [
     path('orders/', views.production_order_list, name='production_order_list'),
     path('orders/create/', views.production_order_create, name='production_order_create'),
     path('orders/<int:pk>/', views.production_order_detail, name='production_order_detail'),
+    path('orders/<int:pk>/update/', views.production_order_update, name='production_order_update'),
+    path('orders/<int:pk>/submit-approval/', views.production_order_submit_approval, name='production_order_submit_approval'),
     path('orders/<int:pk>/approve/', views.production_order_approve, name='production_order_approve'),
     path('orders/<int:pk>/delete/', views.production_order_delete, name='production_order_delete'),
 
@@ -16,6 +18,8 @@ urlpatterns = [
     path('boms/', views.bill_of_materials_list, name='bill_of_materials_list'),
     path('boms/create/', views.bill_of_materials_create, name='bill_of_materials_create'),
     path('boms/<int:pk>/', views.bill_of_materials_detail, name='bill_of_materials_detail'),
+    path('boms/<int:pk>/update/', views.bill_of_materials_update, name='bill_of_materials_update'),
+    path('boms/<int:pk>/delete/', views.bill_of_materials_delete, name='bill_of_materials_delete'),
 
     # Work Order URLs
     path('work-orders/', views.work_order_list, name='work_order_list'),

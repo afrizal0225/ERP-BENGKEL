@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Sales Dashboard - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-chart-line"></i> Sales Management</h1>
+        <p class="lead">Manage customers, orders, invoices, and sales performance</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_customers }}</h5>
+                <p class="card-text">Total Customers</p>
+                <a href="{% url 'customer_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_orders }}</h5>
+                <p class="card-text">Total Orders</p>
+                <a href="{% url 'sales_order_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">{{ pending_orders }}</h5>
+                <p class="card-text">Pending Orders</p>
+                <a href="{% url 'sales_order_list' %}?status=pending" class="btn btn-light btn-sm">View Pending</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-white">
+            <div class="card-body">
+                <h5 class="card-title">${{ total_revenue|floatformat:0 }}</h5>
+                <p class="card-text">Total Revenue</p>
+                <a href="{% url 'sales_reports' %}" class="btn btn-light btn-sm">View Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'customer_create' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-user-plus"></i> Add Customer
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'sales_order_create' %}" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-plus"></i> New Order
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'product_pricing_list' %}" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-tags"></i> Manage Pricing
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'sales_reports' %}" class="btn btn-outline-warning btn-block">
+                            <i class="fas fa-chart-bar"></i> View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders and Top Customers -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Orders</h5>
+                <a href="{% url 'sales_order_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'sales_order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                                <td>{{ order.customer.name }}</td>
+                                <td>
+                                    {% if order.status == 'draft' %}
+                                        <span class="badge badge-secondary">Draft</span>
+                                    {% elif order.status == 'confirmed' %}
+                                        <span class="badge badge-info">Confirmed</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge badge-primary">Processing</span>
+                                    {% elif order.status == 'shipped' %}
+                                        <span class="badge badge-warning">Shipped</span>
+                                    {% elif order.status == 'delivered' %}
+                                        <span class="badge badge-success">Delivered</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{{ order.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ order.total_amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No recent orders</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Customers</h5>
+                <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-primary float-right">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in top_customers %}
+                            <tr>
+                                <td><a href="{% url 'customer_detail' customer.pk %}">{{ customer.name }}</a></td>
+                                <td>{{ customer.order_count }}</td>
+                                <td>${{ customer.total_spent|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No customer data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Tasks -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Pending Tasks</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-clock"></i> Pending Orders</h6>
+                            <p>{{ pending_orders }} orders waiting for processing</p>
+                            {% if pending_orders > 0 %}
+                            <a href="{% url 'bulk_process_orders' %}" class="btn btn-sm btn-info">Process Orders</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-file-invoice"></i> Unpaid Invoices</h6>
+                            <p>Check outstanding payments</p>
+                            <a href="{% url 'invoice_list' %}?status=unpaid" class="btn btn-sm btn-warning">View Invoices</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-chart-line"></i> Sales Performance</h6>
+                            <p>View detailed sales analytics</p>
+                            <a href="{% url 'sales_reports' %}" class="btn btn-sm btn-success">View Reports</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

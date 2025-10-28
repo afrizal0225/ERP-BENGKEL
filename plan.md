@@ -150,23 +150,23 @@ graph TD
     D --> D3[Production Deployment]
 ```
 
-### Phase 1: Foundation (2 weeks)
+### Phase 1: Foundation
 - Set up Django project structure
 - Implement user authentication and role management
 - Create basic UI templates and navigation
 - Configure database models and relationships
 
-### Phase 2: Core Modules (6 weeks)
+### Phase 2: Core Modules
 - Develop Inventory Management module
 - Implement Purchase Management module
 - Build Manufacturing Management module with PO, BOM, and SPK functionality
 
-### Phase 3: Advanced Features (4 weeks)
+### Phase 3: Advanced Features
 - Implement Sales Management module
 - Develop Finance Management module
 - Create comprehensive reporting and analytics
 
-### Phase 4: Testing & Deployment (2 weeks)
+### Phase 4: Testing & Deployment
 - Perform integration testing across all modules
 - Conduct user acceptance testing
 - Deploy to production environment
