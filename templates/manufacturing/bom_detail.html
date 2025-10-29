@@ -86,6 +86,7 @@
                                 <th>Quantity</th>
                                 <th>Unit</th>
                                 <th>Unit Cost</th>
+                                <th>Allocated Stages</th>
                                 <th>Total Cost</th>
                             </tr>
                         </thead>
@@ -96,17 +97,24 @@
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ item.material.unit }}</td>
                                 <td>${{ item.unit_cost|floatformat:2 }}</td>
+                                <td>
+                                    {% for stage in item.get_allocated_stages_display %}
+                                        <span class="badge badge-info">{{ stage }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">No stages allocated</span>
+                                    {% endfor %}
+                                </td>
                                 <td>${{ item.total_cost|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">No items found in this BOM.</td>
+                                <td colspan="6" class="text-center text-muted">No items found in this BOM.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr class="table-info">
-                                <th colspan="4">Total Cost</th>
+                                <th colspan="5">Total Cost</th>
                                 <th>${{ bom.total_cost|floatformat:2 }}</th>
                             </tr>
                         </tfoot>

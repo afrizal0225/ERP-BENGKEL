@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_list' %}">Production Orders</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'production_order_detail' po.pk %}">{{ po.po_number }}</a></li>
+                <li class="breadcrumb-item active">Cancel</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h4><i class="fas fa-exclamation-triangle"></i> Confirm Cancellation</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5>Are you sure you want to cancel this Production Order?</h5>
+                    <p>This action cannot be undone. Cancelling this production order will also cancel all related work orders that are still pending or in progress.</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Production Order Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>PO Number:</strong> {{ po.po_number }}</li>
+                            <li><strong>Product:</strong> {{ po.product.name }}</li>
+                            <li><strong>Quantity:</strong> {{ po.quantity }}</li>
+                            <li><strong>Current Status:</strong>
+                                {% if po.status == 'draft' %}
+                                    <span class="badge badge-secondary">Draft</span>
+                                {% elif po.status == 'pending_approval' %}
+                                    <span class="badge badge-warning">Pending Approval</span>
+                                {% elif po.status == 'approved' %}
+                                    <span class="badge badge-info">Approved</span>
+                                {% elif po.status == 'in_progress' %}
+                                    <span class="badge badge-primary">In Progress</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Related Work Orders:</h6>
+                        {% if active_work_orders %}
+                            <ul>
+                                {% for wo in active_work_orders %}
+                                <li>{{ wo.wo_number }} - {{ wo.stage|title }} ({{ wo.status|title }})</li>
+                                {% endfor %}
+                            </ul>
+                            <p class="text-muted">These work orders will also be cancelled.</p>
+                        {% else %}
+                            <p class="text-muted">No active work orders to cancel.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="cancellation_reason">Cancellation Reason (Optional):</label>
+                        <textarea class="form-control" id="cancellation_reason" name="cancellation_reason" rows="3" placeholder="Please provide a reason for cancellation..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'production_order_detail' po.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Production Order
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Yes, Cancel Production Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

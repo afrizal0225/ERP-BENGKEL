@@ -55,12 +55,35 @@ def manufacturing_list(request):
 # Production Order Views
 @login_required
 def production_order_list(request):
-    production_orders = ProductionOrder.objects.select_related('product', 'created_by', 'approved_by').order_by('-planned_start_date')
+    # Start with base queryset
+    production_orders = ProductionOrder.objects.select_related('product', 'created_by', 'approved_by')
+
+    # Apply filters
+    search_query = request.GET.get('search')
+    status_filter = request.GET.get('status')
+    priority_filter = request.GET.get('priority')
+
+    if search_query:
+        production_orders = production_orders.filter(
+            Q(po_number__icontains=search_query) |
+            Q(product__name__icontains=search_query) |
+            Q(created_by__username__icontains=search_query)
+        )
+
+    if status_filter:
+        production_orders = production_orders.filter(status=status_filter)
+
+    if priority_filter:
+        production_orders = production_orders.filter(priority=priority_filter)
+
+    # Order by planned start date
+    production_orders = production_orders.order_by('-planned_start_date')
+
     paginator = Paginator(production_orders, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Get status counts for summary cards
+    # Get status counts for summary cards (these should be from all records, not filtered)
     status_counts = ProductionOrder.objects.aggregate(
         draft=Count('id', filter=Q(status='draft')),
         pending_approval=Count('id', filter=Q(status='pending_approval')),
@@ -216,6 +239,44 @@ def production_order_delete(request, pk):
         'title': 'Delete Production Order'
     }
     return render(request, 'manufacturing/production_order_confirm_delete.html', context)
+
+
+@login_required
+def production_order_cancel(request, pk):
+    po = get_object_or_404(ProductionOrder, pk=pk)
+
+    # Check permissions - only allow cancellation for certain statuses
+    if po.status not in ['draft', 'pending_approval', 'approved', 'in_progress']:
+        messages.error(request, 'Cannot cancel production order with current status.')
+        return redirect('production_order_detail', pk=pk)
+
+    # Check user permissions
+    if not (request.user.is_superuser or hasattr(request.user, 'userprofile') and
+            request.user.userprofile.role in ['admin', 'production_manager']):
+        messages.error(request, 'You do not have permission to cancel production orders.')
+        return redirect('production_order_detail', pk=pk)
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            # Cancel all related work orders first
+            po.work_orders.filter(status__in=['pending', 'in_progress']).update(status='cancelled')
+
+            # Cancel the production order
+            po.status = 'cancelled'
+            po.save()
+
+            messages.success(request, f'Production Order {po.po_number} has been cancelled.')
+            return redirect('production_order_detail', pk=pk)
+
+    # Get active work orders for display
+    active_work_orders = po.work_orders.filter(status__in=['pending', 'in_progress'])
+
+    context = {
+        'po': po,
+        'active_work_orders': active_work_orders,
+        'title': f'Cancel Production Order: {po.po_number}'
+    }
+    return render(request, 'manufacturing/production_order_confirm_cancel.html', context)
 
 
 # Bill of Materials Views
@@ -374,6 +435,18 @@ def generate_work_orders(request):
             start_date = form.cleaned_data['planned_start_date']
             duration_days = form.cleaned_data['duration_days']
 
+            # Get BOM for material allocation
+            try:
+                bom = po.product.bill_of_materials.filter(is_active=True).first()
+                if not bom:
+                    messages.error(request, 'No active BOM found for this product.')
+                    return redirect('production_order_detail', pk=po.pk)
+            except AttributeError:
+                bom = po.product.bill_of_materials
+                if not bom or not bom.is_active:
+                    messages.error(request, 'No active BOM found for this product.')
+                    return redirect('production_order_detail', pk=po.pk)
+
             stages_data = [
                 ('gurat', form.cleaned_data.get('gurat_quantity')),
                 ('assembly', form.cleaned_data.get('assembly_quantity')),
@@ -388,7 +461,7 @@ def generate_work_orders(request):
                     if quantity and quantity > 0:
                         end_date = current_date + timedelta(days=duration_days - 1)
 
-                        WorkOrder.objects.create(
+                        work_order = WorkOrder.objects.create(
                             wo_number=f"WO-{po.po_number}-{stage.upper()[:3]}-{timezone.now().strftime('%H%M%S')}",
                             production_order=po,
                             stage=stage,
@@ -396,6 +469,19 @@ def generate_work_orders(request):
                             planned_start_date=current_date,
                             planned_end_date=end_date,
                         )
+
+                        # Create material consumption records based on BOM allocations
+                        for bom_item in bom.items.filter(allocated_stages__contains=[stage]):
+                            # Calculate required quantity for this work order
+                            required_quantity = bom_item.quantity * (quantity / po.quantity)
+
+                            MaterialConsumption.objects.create(
+                                work_order=work_order,
+                                material=bom_item.material,
+                                planned_quantity=required_quantity,
+                                actual_quantity=0,  # Will be updated when consumption is recorded
+                                recorded_by=request.user
+                            )
 
                         current_date = end_date + timedelta(days=1)
 
@@ -466,6 +552,35 @@ def record_production_progress(request, wo_pk):
         'title': f'Record Production Progress - {wo.wo_number}'
     }
     return render(request, 'manufacturing/record_progress.html', context)
+
+
+@login_required
+def work_order_cancel(request, pk):
+    """Cancel a work order"""
+    wo = get_object_or_404(WorkOrder, pk=pk)
+
+    # Check permissions - only allow cancellation for certain statuses
+    if wo.status not in ['pending', 'in_progress', 'on_hold']:
+        messages.error(request, 'Cannot cancel work order with current status.')
+        return redirect('work_order_detail', pk=pk)
+
+    # Check user permissions
+    if not (request.user.is_superuser or hasattr(request.user, 'userprofile') and
+            request.user.userprofile.role in ['admin', 'production_manager']):
+        messages.error(request, 'You do not have permission to cancel work orders.')
+        return redirect('work_order_detail', pk=pk)
+
+    if request.method == 'POST':
+        wo.status = 'cancelled'
+        wo.save()
+        messages.success(request, f'Work Order {wo.wo_number} has been cancelled.')
+        return redirect('work_order_detail', pk=pk)
+
+    context = {
+        'wo': wo,
+        'title': f'Cancel Work Order: {wo.wo_number}'
+    }
+    return render(request, 'manufacturing/work_order_confirm_cancel.html', context)
 
 
 # Manufacturing Reports

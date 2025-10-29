@@ -25,6 +25,11 @@
                     <i class="fas fa-chart-line"></i> Update Progress
                 </a>
                 {% endif %}
+                {% if wo.status in 'pending,in_progress,on_hold' and user.is_superuser or user.userprofile.role in 'admin,production_manager' %}
+                <a href="{% url 'work_order_cancel' wo.pk %}" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Cancel WO
+                </a>
+                {% endif %}
                 <a href="{% url 'work_order_list' %}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>

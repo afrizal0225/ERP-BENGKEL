@@ -12,6 +12,7 @@ urlpatterns = [
     path('orders/<int:pk>/update/', views.production_order_update, name='production_order_update'),
     path('orders/<int:pk>/submit-approval/', views.production_order_submit_approval, name='production_order_submit_approval'),
     path('orders/<int:pk>/approve/', views.production_order_approve, name='production_order_approve'),
+    path('orders/<int:pk>/cancel/', views.production_order_cancel, name='production_order_cancel'),
     path('orders/<int:pk>/delete/', views.production_order_delete, name='production_order_delete'),
 
     # Bill of Materials URLs
@@ -24,6 +25,7 @@ urlpatterns = [
     # Work Order URLs
     path('work-orders/', views.work_order_list, name='work_order_list'),
     path('work-orders/<int:pk>/', views.work_order_detail, name='work_order_detail'),
+    path('work-orders/<int:pk>/cancel/', views.work_order_cancel, name='work_order_cancel'),
     path('generate-work-orders/', views.generate_work_orders, name='generate_work_orders'),
 
     # Material Consumption and Progress URLs

@@ -39,13 +39,25 @@ class BillOfMaterialsForm(forms.ModelForm):
 
 
 class BOMItemForm(forms.ModelForm):
+    allocated_stages = forms.MultipleChoiceField(
+        choices=BOMItem.STAGE_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        help_text="Select which production stages will use this material"
+    )
+
     class Meta:
         model = BOMItem
-        fields = ['material', 'quantity', 'unit_cost']  # Add 'unit_cost' to fields
+        fields = ['material', 'quantity', 'unit_cost', 'allocated_stages']
         widgets = {
             'quantity': forms.NumberInput(attrs={'step': '0.01'}),
-            'unit_cost': forms.NumberInput(attrs={'step': '0.01'}),  # Add widget for unit_cost
+            'unit_cost': forms.NumberInput(attrs={'step': '0.01'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['allocated_stages'].initial = self.instance.allocated_stages
 
 
 # Formset for BOM items
@@ -97,18 +109,38 @@ class MaterialConsumptionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if work_order:
-            # Filter materials to those in the BOM for this production order
+            # Filter materials to those allocated to this work order's stage
             try:
                 bom = work_order.production_order.product.bill_of_materials.filter(is_active=True).first()
                 if bom:
-                    material_ids = bom.items.values_list('material_id', flat=True)
+                    # Get materials allocated to this stage
+                    material_ids = bom.items.filter(
+                        allocated_stages__contains=[work_order.stage]
+                    ).values_list('material_id', flat=True)
                     self.fields['material'].queryset = RawMaterial.objects.filter(id__in=material_ids)
+
+                    # Set initial planned quantity from existing consumption record if it exists
+                    existing_consumption = work_order.material_consumptions.filter(
+                        material_id__in=material_ids
+                    ).first()
+                    if existing_consumption:
+                        self.fields['planned_quantity'].initial = existing_consumption.planned_quantity
             except AttributeError:
                 # If bill_of_materials is a single object (OneToOneField), not a manager
                 bom = work_order.production_order.product.bill_of_materials
                 if bom and bom.is_active:
-                    material_ids = bom.items.values_list('material_id', flat=True)
+                    # Get materials allocated to this stage
+                    material_ids = bom.items.filter(
+                        allocated_stages__contains=[work_order.stage]
+                    ).values_list('material_id', flat=True)
                     self.fields['material'].queryset = RawMaterial.objects.filter(id__in=material_ids)
+
+                    # Set initial planned quantity from existing consumption record if it exists
+                    existing_consumption = work_order.material_consumptions.filter(
+                        material_id__in=material_ids
+                    ).first()
+                    if existing_consumption:
+                        self.fields['planned_quantity'].initial = existing_consumption.planned_quantity
 
 
 class ProductionProgressForm(forms.ModelForm):

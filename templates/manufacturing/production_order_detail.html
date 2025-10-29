@@ -32,6 +32,11 @@
                     <i class="fas fa-cogs"></i> Generate Work Orders
                 </a>
                 {% endif %}
+                {% if po.status in 'draft,pending_approval,approved,in_progress' and user.is_superuser or user.userprofile.role in 'admin,production_manager' %}
+                <a href="{% url 'production_order_cancel' po.pk %}" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Cancel PO
+                </a>
+                {% endif %}
                 <a href="{% url 'production_order_list' %}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>

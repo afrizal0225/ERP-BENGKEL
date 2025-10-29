@@ -29,18 +29,45 @@
                     <h5>BOM Items</h5>
                     {{ formset.management_form }}
                     <div id="bom-items">
-                        {% for form in formset %}
+                        {% for bom_form in formset %}
                         <div class="bom-item card mb-3">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-5">
-                                        {% bootstrap_field form.material %}
-                                    </div>
                                     <div class="col-md-3">
-                                        {% bootstrap_field form.quantity %}
+                                        {% bootstrap_field bom_form.material %}
                                     </div>
-                                    <div class="col-md-3">
-                                        {% bootstrap_field form.unit_cost %}
+                                    <div class="col-md-2">
+                                        {% bootstrap_field bom_form.quantity %}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {% bootstrap_field bom_form.unit_cost %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Allocated Stages:</label>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="bomitem_set-{{ forloop.counter0 }}-allocated_stages" value="gurat" id="id_allocated_stages_{{ forloop.counter0 }}_0" {% if 'gurat' in bom_form.allocated_stages.value %}checked{% endif %}>
+                                                        <label class="form-check-label" for="id_allocated_stages_{{ forloop.counter0 }}_0">Gurat (Cutting)</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="bomitem_set-{{ forloop.counter0 }}-allocated_stages" value="assembly" id="id_allocated_stages_{{ forloop.counter0 }}_1" {% if 'assembly' in bom_form.allocated_stages.value %}checked{% endif %}>
+                                                        <label class="form-check-label" for="id_allocated_stages_{{ forloop.counter0 }}_1">Assembly</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="bomitem_set-{{ forloop.counter0 }}-allocated_stages" value="press" id="id_allocated_stages_{{ forloop.counter0 }}_2" {% if 'press' in bom_form.allocated_stages.value %}checked{% endif %}>
+                                                        <label class="form-check-label" for="id_allocated_stages_{{ forloop.counter0 }}_2">Press</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" name="bomitem_set-{{ forloop.counter0 }}-allocated_stages" value="finishing" id="id_allocated_stages_{{ forloop.counter0 }}_3" {% if 'finishing' in bom_form.allocated_stages.value %}checked{% endif %}>
+                                                        <label class="form-check-label" for="id_allocated_stages_{{ forloop.counter0 }}_3">Finishing</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="col-md-1">
                                         <button type="button" class="btn btn-danger btn-sm remove-item">
@@ -81,16 +108,43 @@ $(document).ready(function() {
             <div class="bom-item card mb-3">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <select name="bomitem_set-${itemCount}-material" class="form-control">
                                 <option value="">Select Material</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input type="number" name="bomitem_set-${itemCount}-quantity" class="form-control" step="0.01" placeholder="Quantity">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input type="number" name="bomitem_set-${itemCount}-unit_cost" class="form-control" step="0.01" placeholder="Unit Cost">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Allocated Stages:</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="gurat" id="id_allocated_stages_${itemCount}_0">
+                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_0">Gurat (Cutting)</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="assembly" id="id_allocated_stages_${itemCount}_1">
+                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_1">Assembly</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="press" id="id_allocated_stages_${itemCount}_2">
+                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_2">Press</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="finishing" id="id_allocated_stages_${itemCount}_3">
+                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_3">Finishing</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-1">
                             <button type="button" class="btn btn-danger btn-sm remove-item">

@@ -107,10 +107,20 @@ class BillOfMaterials(models.Model):
 
 class BOMItem(models.Model):
     """Individual items in a Bill of Materials"""
+    STAGE_CHOICES = [
+        ('gurat', 'Gurat (Cutting)'),
+        ('assembly', 'Assembly'),
+        ('press', 'Press'),
+        ('finishing', 'Finishing'),
+    ]
+
     bom = models.ForeignKey(BillOfMaterials, on_delete=models.CASCADE, related_name='items')
     material = models.ForeignKey(RawMaterial, on_delete=models.CASCADE, related_name='bom_items')
     quantity = models.DecimalField(max_digits=10, decimal_places=2, help_text="Quantity required per unit of finished product")
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Cost per unit at BOM creation time")
+
+    # Stage allocation - which production stages use this material
+    allocated_stages = models.JSONField(default=list, help_text="List of production stages that use this material")
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -120,12 +130,23 @@ class BOMItem(models.Model):
         verbose_name_plural = 'BOM Items'
 
     def __str__(self):
-        return f"{self.material.name} - {self.quantity} {self.material.unit}"
+        stages = ', '.join([stage.title() for stage in self.allocated_stages]) if self.allocated_stages else 'No stages'
+        return f"{self.material.name} - {self.quantity} {self.material.unit} ({stages})"
 
     @property
     def total_cost(self):
         """Calculate total cost for this BOM item"""
         return self.quantity * self.unit_cost
+
+    def get_allocated_stages_display(self):
+        """Return human-readable stage names"""
+        stage_names = {
+            'gurat': 'Gurat (Cutting)',
+            'assembly': 'Assembly',
+            'press': 'Press',
+            'finishing': 'Finishing'
+        }
+        return [stage_names.get(stage, stage) for stage in self.allocated_stages]
 
 
 class WorkOrder(models.Model):
@@ -171,6 +192,14 @@ class WorkOrder(models.Model):
 
     def __str__(self):
         return f"WO-{self.wo_number} - {self.production_order.product.name} ({self.get_stage_display()})"
+
+    @property
+    def progress_percentage(self):
+        """Calculate progress percentage from latest progress entry"""
+        latest_progress = self.progress_entries.first()
+        if latest_progress:
+            return latest_progress.progress_percentage
+        return 0
 
 
 class MaterialConsumption(models.Model):
