@@ -33,6 +33,14 @@ class ProductCategoryForm(forms.ModelForm):
 
 
 class RawMaterialForm(forms.ModelForm):
+    total_value = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'step': '0.01', 'readonly': True}),
+        help_text="Total value calculated as unit_price × current_stock"
+    )
+
     class Meta:
         model = RawMaterial
         fields = [
@@ -43,6 +51,11 @@ class RawMaterialForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 3}),
             'unit_price': forms.NumberInput(attrs={'step': '0.01'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['total_value'].initial = self.instance.total_value
 
 
 class FinishedProductForm(forms.ModelForm):

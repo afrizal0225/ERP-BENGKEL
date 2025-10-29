@@ -15,9 +15,22 @@ from .models import (
 from .forms import (
     ProductionOrderForm, BillOfMaterialsForm, BOMItemFormSet,
     WorkOrderForm, MaterialConsumptionForm, ProductionProgressForm,
-    BulkWorkOrderGenerationForm
+    BulkWorkOrderGenerationForm, BOMBulkImportForm
 )
 from inventory.models import FinishedProduct, RawMaterial
+
+
+@login_required
+def get_material_price(request, material_id):
+    """API view to get material unit price"""
+    try:
+        material = RawMaterial.objects.get(id=material_id)
+        return JsonResponse({
+            'unit_price': float(material.unit_price),
+            'name': material.name
+        })
+    except RawMaterial.DoesNotExist:
+        return JsonResponse({'error': 'Material not found'}, status=404)
 
 
 @login_required
@@ -318,9 +331,13 @@ def bill_of_materials_create(request):
         form = BillOfMaterialsForm()
         formset = BOMItemFormSet()
 
+    # Get all active raw materials for the template
+    materials = RawMaterial.objects.filter(is_active=True).order_by('name').values('id', 'code', 'name', 'unit_price')
+
     context = {
         'form': form,
         'formset': formset,
+        'materials': list(materials),
         'title': 'Create Bill of Materials'
     }
     return render(request, 'manufacturing/bom_form.html', context)
@@ -362,10 +379,14 @@ def bill_of_materials_update(request, pk):
         form = BillOfMaterialsForm(instance=bom)
         formset = BOMItemFormSet(instance=bom)
 
+    # Get all active raw materials for the template
+    materials = RawMaterial.objects.filter(is_active=True).order_by('name').values('id', 'code', 'name', 'unit_price')
+
     context = {
         'form': form,
         'formset': formset,
         'bom': bom,
+        'materials': list(materials),
         'title': f'Update BOM: {bom.product.name} v{bom.version}'
     }
     return render(request, 'manufacturing/bom_form.html', context)
@@ -625,3 +646,222 @@ def manufacturing_reports(request):
         'title': 'Manufacturing Reports'
     }
     return render(request, 'manufacturing/reports.html', context)
+
+
+@login_required
+def download_bom_template(request):
+    """Download BOM import template"""
+    try:
+        import pandas as pd
+    except ImportError:
+        messages.error(request, "pandas library is required for Excel export. Please install it.")
+        return redirect('bill_of_materials_list')
+
+    # Create template DataFrame
+    template_data = {
+        'product_code': ['PROD001', 'PROD001', 'PROD001', 'PROD002', 'PROD002'],
+        'product_name': ['Sample Product 1', 'Sample Product 1', 'Sample Product 1', 'Sample Product 2', 'Sample Product 2'],
+        'bom_version': [1.0, 1.0, 1.0, 1.0, 1.0],
+        'material_code': ['MAT001', 'MAT002', 'MAT003', 'MAT004', 'MAT005'],
+        'material_name': ['Material 1', 'Material 2', 'Material 3', 'Material 4', 'Material 5'],
+        'quantity': [2.5, 1.0, 3.0, 1.5, 0.5],
+        'allocated_stages': ['gurat,assembly', 'press', 'finishing,gurat', 'assembly', 'gurat,press,finishing']
+    }
+
+    df = pd.DataFrame(template_data)
+
+    # Get actual products and materials from database
+    products = FinishedProduct.objects.filter(is_active=True).values('code', 'name').order_by('code')
+    materials = RawMaterial.objects.filter(is_active=True).values('code', 'name', 'unit', 'unit_price').order_by('code')
+
+    # Create Excel response
+    from django.http import HttpResponse
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="bom_import_template.xlsx"'
+
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='BOM_Import', index=False)
+
+        # Add products reference sheet
+        products_df = pd.DataFrame(list(products))
+        products_df.columns = ['Product Code', 'Product Name']
+        products_df.to_excel(writer, sheet_name='Available_Products', index=False)
+
+        # Add materials reference sheet
+        materials_df = pd.DataFrame(list(materials))
+        materials_df.columns = ['Material Code', 'Material Name', 'Unit', 'Unit Price']
+        materials_df.to_excel(writer, sheet_name='Available_Materials', index=False)
+
+        # Add instructions sheet
+        instructions_df = pd.DataFrame({
+            'Instructions': [
+                'Fill out this template to bulk import Bills of Materials (BOMs)',
+                '',
+                'REQUIRED COLUMNS:',
+                '• product_code: Code of the finished product (see Available_Products sheet)',
+                '• material_code: Code of the raw material (see Available_Materials sheet)',
+                '• quantity: Quantity of material needed (decimal allowed)',
+                '',
+                'OPTIONAL COLUMNS:',
+                '• product_name: Name of the product (for reference)',
+                '• bom_version: BOM version number (defaults to 1.0)',
+                '• material_name: Name of the material (for reference)',
+                '• allocated_stages: Production stages (comma-separated: gurat,assembly,press,finishing)',
+                '',
+                'NOTES:',
+                '• Each row represents one BOM item',
+                '• Multiple rows with same product_code + bom_version = one BOM with multiple items',
+                '• Existing BOMs will be updated (items replaced)',
+                '• allocated_stages can be: gurat, assembly, press, finishing (or combinations)',
+                '• Leave allocated_stages empty for no stage allocation',
+                '• Check Available_Products and Available_Materials sheets for valid codes'
+            ]
+        })
+        instructions_df.to_excel(writer, sheet_name='Instructions', index=False)
+
+    return response
+
+
+@login_required
+def bom_bulk_import(request):
+    """Bulk import BOMs from Excel file"""
+    if request.method == 'POST':
+        form = BOMBulkImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = form.cleaned_data['excel_file']
+
+            try:
+                import pandas as pd
+            except ImportError:
+                messages.error(request, "pandas library is required for Excel import. Please install it.")
+                return redirect('bom_bulk_import')
+
+            try:
+                # Read Excel file
+                df = pd.read_excel(excel_file)
+
+                # Validate required columns
+                required_cols = ['product_code', 'material_code', 'quantity']
+                missing_cols = [col for col in required_cols if col not in df.columns]
+                if missing_cols:
+                    messages.error(request, f"Missing required columns: {', '.join(missing_cols)}")
+                    return redirect('bom_bulk_import')
+
+                # Group by product and version for BOM creation
+                group_cols = ['product_code']
+                if 'bom_version' in df.columns:
+                    group_cols.append('bom_version')
+
+                bom_groups = df.groupby(group_cols)
+
+                success_count = 0
+                error_messages = []
+                warning_messages = []
+
+                with transaction.atomic():
+                    for group_keys, group_df in bom_groups:
+                        try:
+                            if isinstance(group_keys, tuple):
+                                product_code = group_keys[0]
+                                version = group_keys[1] if len(group_keys) > 1 else 1.0
+                            else:
+                                product_code = group_keys
+                                version = 1.0
+
+                            # Get product
+                            try:
+                                product = FinishedProduct.objects.get(code=product_code)
+                            except FinishedProduct.DoesNotExist:
+                                error_messages.append(f"Product with code '{product_code}' not found")
+                                continue
+
+                            # Create or update BOM
+                            bom, created = BillOfMaterials.objects.get_or_create(
+                                product=product,
+                                version=version,
+                                defaults={'created_by': request.user}
+                            )
+
+                            if not created:
+                                warning_messages.append(f"BOM for {product_code} v{version} already exists and will be updated")
+
+                            # Clear existing items
+                            bom.items.all().delete()
+
+                            # Create BOM items
+                            for idx, row in group_df.iterrows():
+                                try:
+                                    material_code = str(row['material_code']).strip()
+                                    material = RawMaterial.objects.get(code=material_code)
+
+                                    quantity = Decimal(row['quantity'])
+                                    if quantity <= 0:
+                                        error_messages.append(f"Invalid quantity {quantity} for material {material_code} in product {product_code}")
+                                        continue
+
+                                    # Parse allocated stages
+                                    stages = []
+                                    if 'allocated_stages' in df.columns and pd.notna(row.get('allocated_stages')):
+                                        stages_str = str(row['allocated_stages']).strip()
+                                        if stages_str:
+                                            stages = [s.strip() for s in stages_str.split(',') if s.strip()]
+                                            # Validate stages
+                                            valid_stages = ['gurat', 'assembly', 'press', 'finishing']
+                                            invalid_stages = [s for s in stages if s not in valid_stages]
+                                            if invalid_stages:
+                                                warning_messages.append(f"Invalid stages {invalid_stages} for material {material_code}, using valid stages only")
+                                            stages = [s for s in stages if s in valid_stages]
+
+                                    # Calculate unit cost
+                                    unit_cost = material.unit_price * quantity
+
+                                    BOMItem.objects.create(
+                                        bom=bom,
+                                        material=material,
+                                        quantity=quantity,
+                                        unit_cost=unit_cost,
+                                        allocated_stages=stages
+                                    )
+                                    print(f"Created BOMItem: {material_code} - {quantity} - {unit_cost}")
+
+                                except RawMaterial.DoesNotExist:
+                                    error_messages.append(f"Material with code '{material_code}' not found")
+                                    continue
+                                except (ValueError, TypeError) as e:
+                                    error_messages.append(f"Invalid data for material {material_code}: {str(e)}")
+                                    continue
+
+                            # Calculate total cost
+                            bom.calculate_total_cost()
+                            success_count += 1
+
+                        except Exception as e:
+                            error_messages.append(f"Error processing BOM for {product_code}: {str(e)}")
+
+                # Display results
+                if success_count > 0:
+                    messages.success(request, f"Successfully imported/updated {success_count} BOM(s)")
+
+                for msg in warning_messages[:5]:  # Limit warnings
+                    messages.warning(request, msg)
+
+                for msg in error_messages[:10]:  # Limit errors
+                    messages.error(request, msg)
+
+                if len(warning_messages) > 5:
+                    messages.warning(request, f"... and {len(warning_messages) - 5} more warnings")
+                if len(error_messages) > 10:
+                    messages.error(request, f"... and {len(error_messages) - 10} more errors")
+
+            except Exception as e:
+                messages.error(request, f"Import failed: {str(e)}")
+
+            return redirect('bill_of_materials_list')
+    else:
+        form = BOMBulkImportForm()
+
+    context = {
+        'form': form,
+        'title': 'Bulk Import Bills of Materials'
+    }
+    return render(request, 'manufacturing/bom_bulk_import.html', context)

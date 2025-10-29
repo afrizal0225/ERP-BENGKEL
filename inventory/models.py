@@ -56,6 +56,10 @@ class RawMaterial(models.Model):
         else:
             return 'In Stock'
 
+    @property
+    def total_value(self):
+        return self.unit_price * self.current_stock
+
 
 class ProductCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -119,6 +123,18 @@ class FinishedProduct(models.Model):
             return 'Low Stock'
         else:
             return 'In Stock'
+
+    @property
+    def total_value(self):
+        return self.unit_price * self.current_stock
+
+    @property
+    def total_value(self):
+        return self.unit_price * self.current_stock
+
+    @property
+    def total_value(self):
+        return self.unit_price * self.current_stock
 
 
 class InventoryTransaction(models.Model):

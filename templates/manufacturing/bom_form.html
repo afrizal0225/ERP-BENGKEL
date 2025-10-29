@@ -40,7 +40,10 @@
                                         {% bootstrap_field bom_form.quantity %}
                                     </div>
                                     <div class="col-md-2">
-                                        {% bootstrap_field bom_form.unit_cost %}
+                                        <div class="form-group">
+                                            <label for="id_unit_cost_{{ forloop.counter0 }}">BOM Cost</label>
+                                            <input type="number" name="bomitem_set-{{ forloop.counter0 }}-unit_cost" class="form-control" id="id_unit_cost_{{ forloop.counter0 }}" step="0.01" value="{{ bom_form.instance.unit_cost|default:0 }}" readonly>
+                                        </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
@@ -99,25 +102,46 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ materials|json_script:"materials-data" }}
 <script>
 $(document).ready(function() {
+    // Function to populate material options
+    function populateMaterialOptions(selectElement) {
+        selectElement.empty();
+        selectElement.append('<option value="">Select Material</option>');
+        var materials = JSON.parse(document.getElementById('materials-data').textContent);
+        materials.forEach(function(material) {
+            selectElement.append('<option value="' + material.id + '" data-price="' + material.unit_price + '">' + material.code + ' - ' + material.name + '</option>');
+        });
+    }
+
+    // Function to calculate BOM cost
+    function calculateBOMCost(quantityInput, costInput) {
+        var quantity = parseFloat(quantityInput.val()) || 0;
+        var materialSelect = quantityInput.closest('.bom-item').find('select[name*="-material"]');
+        var selectedOption = materialSelect.find('option:selected');
+        var unitPrice = parseFloat(selectedOption.data('price')) || 0;
+        var bomCost = quantity * unitPrice;
+        costInput.val(bomCost.toFixed(2));
+    }
+
     // Add new BOM item
     $('#add-item').click(function() {
-        var itemCount = $('.bom-item').length;
+        var totalForms = parseInt($('#id_bomitem_set-TOTAL_FORMS').val());
         var newItem = `
             <div class="bom-item card mb-3">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3">
-                            <select name="bomitem_set-${itemCount}-material" class="form-control">
+                            <select name="bomitem_set-${totalForms}-material" class="form-control material-select">
                                 <option value="">Select Material</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="bomitem_set-${itemCount}-quantity" class="form-control" step="0.01" placeholder="Quantity">
+                            <input type="number" name="bomitem_set-${totalForms}-quantity" class="form-control quantity-input" step="0.01" placeholder="Quantity">
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="bomitem_set-${itemCount}-unit_cost" class="form-control" step="0.01" placeholder="Unit Cost">
+                            <input type="number" name="bomitem_set-${totalForms}-unit_cost" class="form-control" step="0.01" placeholder="BOM Cost" readonly>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
@@ -125,22 +149,22 @@ $(document).ready(function() {
                                 <div class="row">
                                     <div class="col-6">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="gurat" id="id_allocated_stages_${itemCount}_0">
-                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_0">Gurat (Cutting)</label>
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${totalForms}-allocated_stages" value="gurat" id="id_allocated_stages_${totalForms}_0">
+                                            <label class="form-check-label" for="id_allocated_stages_${totalForms}_0">Gurat (Cutting)</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="assembly" id="id_allocated_stages_${itemCount}_1">
-                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_1">Assembly</label>
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${totalForms}-allocated_stages" value="assembly" id="id_allocated_stages_${totalForms}_1">
+                                            <label class="form-check-label" for="id_allocated_stages_${totalForms}_1">Assembly</label>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="press" id="id_allocated_stages_${itemCount}_2">
-                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_2">Press</label>
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${totalForms}-allocated_stages" value="press" id="id_allocated_stages_${totalForms}_2">
+                                            <label class="form-check-label" for="id_allocated_stages_${totalForms}_2">Press</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${itemCount}-allocated_stages" value="finishing" id="id_allocated_stages_${itemCount}_3">
-                                            <label class="form-check-label" for="id_allocated_stages_${itemCount}_3">Finishing</label>
+                                            <input class="form-check-input" type="checkbox" name="bomitem_set-${totalForms}-allocated_stages" value="finishing" id="id_allocated_stages_${totalForms}_3">
+                                            <label class="form-check-label" for="id_allocated_stages_${totalForms}_3">Finishing</label>
                                         </div>
                                     </div>
                                 </div>
@@ -156,11 +180,51 @@ $(document).ready(function() {
             </div>
         `;
         $('#bom-items').append(newItem);
+
+        // Populate material options for the new item
+        var newSelect = $('#bom-items .bom-item:last .material-select');
+        populateMaterialOptions(newSelect);
+
+        // Update formset management form
+        $('#id_bomitem_set-TOTAL_FORMS').val(totalForms + 1);
     });
 
     // Remove BOM item
     $(document).on('click', '.remove-item', function() {
         $(this).closest('.bom-item').remove();
+        // Update formset management form after removal
+        var totalForms = parseInt($('#id_bomitem_set-TOTAL_FORMS').val()) - 1;
+        $('#id_bomitem_set-TOTAL_FORMS').val(totalForms);
+    });
+
+    // Calculate BOM cost when quantity changes
+    $(document).on('input', '.quantity-input', function() {
+        var quantityInput = $(this);
+        var costInput = quantityInput.closest('.bom-item').find('input[name*="-unit_cost"]');
+        calculateBOMCost(quantityInput, costInput);
+    });
+
+    // Calculate BOM cost when material changes
+    $(document).on('change', '.material-select', function() {
+        var materialSelect = $(this);
+        var quantityInput = materialSelect.closest('.bom-item').find('.quantity-input');
+        var costInput = materialSelect.closest('.bom-item').find('input[name*="-unit_cost"]');
+        calculateBOMCost(quantityInput, costInput);
+    });
+
+    // Initialize existing items - only populate if empty
+    $('.material-select').each(function() {
+        var selectElement = $(this);
+        if (selectElement.find('option').length <= 1) {  // Only has the default "Select Material" option
+            populateMaterialOptions(selectElement);
+        }
+    });
+
+    // Calculate initial BOM costs for existing items
+    $('.bom-item').each(function() {
+        var quantityInput = $(this).find('.quantity-input');
+        var costInput = $(this).find('input[name*="-unit_cost"]');
+        calculateBOMCost(quantityInput, costInput);
     });
 });
 </script>

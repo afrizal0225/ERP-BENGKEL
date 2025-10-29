@@ -48,14 +48,15 @@ class BOMItemForm(forms.ModelForm):
 
     class Meta:
         model = BOMItem
-        fields = ['material', 'quantity', 'unit_cost', 'allocated_stages']
+        fields = ['material', 'quantity', 'allocated_stages']
         widgets = {
             'quantity': forms.NumberInput(attrs={'step': '0.01'}),
-            'unit_cost': forms.NumberInput(attrs={'step': '0.01'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Filter materials to only active ones
+        self.fields['material'].queryset = RawMaterial.objects.filter(is_active=True).order_by('name')
         if self.instance and self.instance.pk:
             self.fields['allocated_stages'].initial = self.instance.allocated_stages
 
@@ -67,8 +68,9 @@ BOMItemFormSet = inlineformset_factory(
     form=BOMItemForm,
     extra=1,
     can_delete=True,
-    min_num=1,
-    validate_min=True,
+    min_num=0,
+    validate_min=False,
+    max_num=20,  # Allow up to 20 items
 )
 
 
@@ -206,3 +208,18 @@ class BulkWorkOrderGenerationForm(forms.Form):
                 )
 
         return cleaned_data
+
+
+class BOMBulkImportForm(forms.Form):
+    """Form for bulk importing BOMs from Excel"""
+    excel_file = forms.FileField(
+        label="Upload BOM Excel File",
+        help_text="Download template first, fill it out, then upload",
+        widget=forms.FileInput(attrs={'accept': '.xlsx,.xls'})
+    )
+
+    def clean_excel_file(self):
+        file = self.cleaned_data['excel_file']
+        if not file.name.endswith(('.xlsx', '.xls')):
+            raise forms.ValidationError("Only Excel files (.xlsx, .xls) are allowed")
+        return file

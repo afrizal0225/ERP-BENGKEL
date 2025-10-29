@@ -117,7 +117,7 @@ class BOMItem(models.Model):
     bom = models.ForeignKey(BillOfMaterials, on_delete=models.CASCADE, related_name='items')
     material = models.ForeignKey(RawMaterial, on_delete=models.CASCADE, related_name='bom_items')
     quantity = models.DecimalField(max_digits=10, decimal_places=2, help_text="Quantity required per unit of finished product")
-    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Cost per unit at BOM creation time")
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="BOM Cost (auto-calculated)", editable=False)
 
     # Stage allocation - which production stages use this material
     allocated_stages = models.JSONField(default=list, help_text="List of production stages that use this material")
@@ -132,6 +132,12 @@ class BOMItem(models.Model):
     def __str__(self):
         stages = ', '.join([stage.title() for stage in self.allocated_stages]) if self.allocated_stages else 'No stages'
         return f"{self.material.name} - {self.quantity} {self.material.unit} ({stages})"
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate unit_cost as quantity * material.unit_price"""
+        if self.material:
+            self.unit_cost = self.quantity * self.material.unit_price
+        super().save(*args, **kwargs)
 
     @property
     def total_cost(self):

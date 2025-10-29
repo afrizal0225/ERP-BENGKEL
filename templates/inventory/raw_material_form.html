@@ -39,6 +39,30 @@
                         </a>
                     </div>
                 </form>
+
+                <div class="mt-3">
+                    <h5>Value Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>Unit Price</h6>
+                                    <h4 class="text-primary">${{ form.instance.unit_price|default:0|floatformat:2 }}</h4>
+                                    <small class="text-muted">Price per {{ form.instance.get_unit_display|default:"unit" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>Total Value</h6>
+                                    <h4 class="text-success">${{ form.instance.total_value|default:0|floatformat:2 }}</h4>
+                                    <small class="text-muted">Current stock × Unit price</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -21,6 +21,8 @@ urlpatterns = [
     path('boms/<int:pk>/', views.bill_of_materials_detail, name='bill_of_materials_detail'),
     path('boms/<int:pk>/update/', views.bill_of_materials_update, name='bill_of_materials_update'),
     path('boms/<int:pk>/delete/', views.bill_of_materials_delete, name='bill_of_materials_delete'),
+    path('boms/bulk-import/', views.bom_bulk_import, name='bom_bulk_import'),
+    path('boms/download-template/', views.download_bom_template, name='download_bom_template'),
 
     # Work Order URLs
     path('work-orders/', views.work_order_list, name='work_order_list'),
@@ -34,4 +36,7 @@ urlpatterns = [
 
     # Reports URLs
     path('reports/', views.manufacturing_reports, name='manufacturing_reports'),
+
+    # API URLs
+    path('api/material-price/<int:material_id>/', views.get_material_price, name='get_material_price'),
 ]

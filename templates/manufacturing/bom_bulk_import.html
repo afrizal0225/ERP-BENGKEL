@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}{{ title }} - ERP Shoe Production{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'manufacturing_list' %}">Manufacturing</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'bill_of_materials_list' %}">BOMs</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <h1><i class="fas fa-upload"></i> {{ title }}</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Bulk Import Instructions</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>How to import BOMs:</strong>
+                    <ol>
+                        <li><a href="{% url 'download_bom_template' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download"></i> Download Excel Template
+                        </a></li>
+                        <li>Open the template and fill it with your BOM data</li>
+                        <li>Save the file and upload it below</li>
+                        <li>Review the import results and fix any errors</li>
+                    </ol>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Required Columns:</h6>
+                        <ul>
+                            <li><code>product_code</code> - Code of the finished product</li>
+                            <li><code>material_code</code> - Code of the raw material</li>
+                            <li><code>quantity</code> - Quantity needed (decimals allowed)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Optional Columns:</h6>
+                        <ul>
+                            <li><code>bom_version</code> - BOM version (defaults to 1.0)</li>
+                            <li><code>allocated_stages</code> - Production stages (comma-separated)</li>
+                            <li><code>product_name</code>, <code>material_name</code> - For reference</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>Important Notes:</strong>
+                    <ul class="mb-0">
+                        <li>Existing BOMs will be updated (items replaced)</li>
+                        <li>Valid stages: <code>gurat</code>, <code>assembly</code>, <code>press</code>, <code>finishing</code></li>
+                        <li>Use commas to separate multiple stages (e.g., "gurat,assembly")</li>
+                        <li>All materials and products must exist in the system</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Upload Excel File</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Import BOMs
+                        </button>
+                        <a href="{% url 'bill_of_materials_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
