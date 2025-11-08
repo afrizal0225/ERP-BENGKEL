@@ -96,7 +96,7 @@
                                 <td>{{ item.material.name }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ item.material.unit }}</td>
-                                <td>${{ item.unit_cost|floatformat:2 }}</td>
+                                <td>${{ item.material.unit_price|floatformat:2 }}</td>
                                 <td>
                                     {% for stage in item.get_allocated_stages_display %}
                                         <span class="badge badge-info">{{ stage }}</span>

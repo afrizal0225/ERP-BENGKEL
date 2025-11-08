@@ -313,20 +313,30 @@ def bill_of_materials_create(request):
         form = BillOfMaterialsForm(request.POST)
         formset = BOMItemFormSet(request.POST)
 
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             with transaction.atomic():
                 bom = form.save(commit=False)
                 bom.created_by = request.user
                 bom.save()
 
                 formset.instance = bom
-                formset.save()
-
-                # Calculate total cost
-                bom.calculate_total_cost()
-
-                messages.success(request, f'BOM for {bom.product.name} created successfully.')
-                return redirect('bill_of_materials_detail', pk=bom.pk)
+                
+                # Debug: Print formset data to see what's being submitted
+                print("Formset data:", request.POST)
+                print("Formset is_valid:", formset.is_valid())
+                
+                if formset.is_valid():
+                    formset.save()
+                    # Calculate total cost
+                    bom.calculate_total_cost()
+                    messages.success(request, f'BOM for {bom.product.name} created successfully.')
+                    return redirect('bill_of_materials_detail', pk=bom.pk)
+                else:
+                    # Debug: Print formset errors
+                    print("Formset errors:", formset.errors)
+                    messages.error(request, 'Please correct the errors in the BOM items.')
+        else:
+            messages.error(request, 'Please correct the errors in the form.')
     else:
         form = BillOfMaterialsForm()
         formset = BOMItemFormSet()
@@ -365,16 +375,26 @@ def bill_of_materials_update(request, pk):
         form = BillOfMaterialsForm(request.POST, instance=bom)
         formset = BOMItemFormSet(request.POST, instance=bom)
 
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid():
             with transaction.atomic():
                 bom = form.save()
-                formset.save()
-
-                # Calculate total cost
-                bom.calculate_total_cost()
-
-                messages.success(request, f'BOM for {bom.product.name} updated successfully.')
-                return redirect('bill_of_materials_detail', pk=bom.pk)
+                
+                # Debug: Print formset data to see what's being submitted
+                print("Formset data:", request.POST)
+                print("Formset is_valid:", formset.is_valid())
+                
+                if formset.is_valid():
+                    formset.save()
+                    # Calculate total cost
+                    bom.calculate_total_cost()
+                    messages.success(request, f'BOM for {bom.product.name} updated successfully.')
+                    return redirect('bill_of_materials_detail', pk=bom.pk)
+                else:
+                    # Debug: Print formset errors
+                    print("Formset errors:", formset.errors)
+                    messages.error(request, 'Please correct the errors in the BOM items.')
+        else:
+            messages.error(request, 'Please correct the errors in the form.')
     else:
         form = BillOfMaterialsForm(instance=bom)
         formset = BOMItemFormSet(instance=bom)
@@ -655,6 +675,12 @@ def download_bom_template(request):
         import pandas as pd
     except ImportError:
         messages.error(request, "pandas library is required for Excel export. Please install it.")
+        return redirect('bill_of_materials_list')
+
+    try:
+        import openpyxl
+    except ImportError:
+        messages.error(request, "openpyxl library is required for Excel export. Please install it.")
         return redirect('bill_of_materials_list')
 
     # Create template DataFrame

@@ -68,8 +68,8 @@ BOMItemFormSet = inlineformset_factory(
     form=BOMItemForm,
     extra=1,
     can_delete=True,
-    min_num=0,
-    validate_min=False,
+    min_num=1,  # Require at least one item
+    validate_min=True,
     max_num=20,  # Allow up to 20 items
 )
 

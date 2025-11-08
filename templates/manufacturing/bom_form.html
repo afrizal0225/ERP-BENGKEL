@@ -31,6 +31,9 @@
                     <div id="bom-items">
                         {% for bom_form in formset %}
                         <div class="bom-item card mb-3">
+                            {{ bom_form.id }}
+                            {{ bom_form.bom }}
+                            {{ bom_form.DELETE }}
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-3">
@@ -133,15 +136,15 @@ $(document).ready(function() {
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3">
-                            <select name="bomitem_set-${totalForms}-material" class="form-control material-select">
+                            <select name="bomitem_set-${totalForms}-material" class="form-control material-select" id="id_bomitem_set-${totalForms}-material">
                                 <option value="">Select Material</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="bomitem_set-${totalForms}-quantity" class="form-control quantity-input" step="0.01" placeholder="Quantity">
+                            <input type="number" name="bomitem_set-${totalForms}-quantity" class="form-control quantity-input" step="0.01" placeholder="Quantity" id="id_bomitem_set-${totalForms}-quantity">
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="bomitem_set-${totalForms}-unit_cost" class="form-control" step="0.01" placeholder="BOM Cost" readonly>
+                            <input type="number" name="bomitem_set-${totalForms}-unit_cost" class="form-control" step="0.01" placeholder="BOM Cost" readonly id="id_bomitem_set-${totalForms}-unit_cost">
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
@@ -176,6 +179,8 @@ $(document).ready(function() {
                             </button>
                         </div>
                     </div>
+                    <input type="hidden" name="bomitem_set-${totalForms}-id" id="id_bomitem_set-${totalForms}-id">
+                    <input type="hidden" name="bomitem_set-${totalForms}-bom" id="id_bomitem_set-${totalForms}-bom">
                 </div>
             </div>
         `;
@@ -191,10 +196,20 @@ $(document).ready(function() {
 
     // Remove BOM item
     $(document).on('click', '.remove-item', function() {
-        $(this).closest('.bom-item').remove();
-        // Update formset management form after removal
-        var totalForms = parseInt($('#id_bomitem_set-TOTAL_FORMS').val()) - 1;
-        $('#id_bomitem_set-TOTAL_FORMS').val(totalForms);
+        var $item = $(this).closest('.bom-item');
+        var $deleteInput = $item.find('input[name*="-DELETE"]');
+        
+        if ($deleteInput.length > 0) {
+            // Mark for deletion if it's an existing item
+            $deleteInput.val('on');
+            $item.hide();
+        } else {
+            // Remove completely if it's a new item
+            $item.remove();
+            // Update formset management form after removal
+            var totalForms = parseInt($('#id_bomitem_set-TOTAL_FORMS').val()) - 1;
+            $('#id_bomitem_set-TOTAL_FORMS').val(totalForms);
+        }
     });
 
     // Calculate BOM cost when quantity changes
@@ -225,6 +240,26 @@ $(document).ready(function() {
         var quantityInput = $(this).find('.quantity-input');
         var costInput = $(this).find('input[name*="-unit_cost"]');
         calculateBOMCost(quantityInput, costInput);
+    });
+
+    // Handle form submission to validate at least one item is filled
+    $('form').on('submit', function(e) {
+        var validItems = 0;
+        $('.bom-item').each(function() {
+            var material = $(this).find('select[name*="-material"]').val();
+            var quantity = $(this).find('input[name*="-quantity"]').val();
+            var isDeleted = $(this).find('input[name*="-DELETE"]').val() === 'on';
+            
+            if (material && quantity && !isDeleted) {
+                validItems++;
+            }
+        });
+        
+        if (validItems === 0) {
+            e.preventDefault();
+            alert('Please add at least one BOM item with material and quantity.');
+            return false;
+        }
     });
 });
 </script>

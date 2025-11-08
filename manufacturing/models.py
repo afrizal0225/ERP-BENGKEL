@@ -96,7 +96,7 @@ class BillOfMaterials(models.Model):
         return f"BOM for {self.product.name} v{self.version}"
 
     def calculate_total_cost(self):
-        """Calculate total material cost from BOM items"""
+        """Calculate total material cost from BOM items (quantity * unit_price)"""
         total = self.items.aggregate(
             total=models.Sum(models.F('quantity') * models.F('material__unit_price'))
         )['total'] or Decimal('0')
@@ -134,15 +134,15 @@ class BOMItem(models.Model):
         return f"{self.material.name} - {self.quantity} {self.material.unit} ({stages})"
 
     def save(self, *args, **kwargs):
-        """Auto-calculate unit_cost as quantity * material.unit_price"""
+        """Auto-calculate unit_cost as material unit price"""
         if self.material:
-            self.unit_cost = self.quantity * self.material.unit_price
+            self.unit_cost = self.material.unit_price
         super().save(*args, **kwargs)
 
     @property
     def total_cost(self):
-        """Calculate total cost for this BOM item"""
-        return self.quantity * self.unit_cost
+        """Calculate total cost for this BOM item (quantity * unit_price)"""
+        return self.quantity * self.material.unit_price
 
     def get_allocated_stages_display(self):
         """Return human-readable stage names"""
