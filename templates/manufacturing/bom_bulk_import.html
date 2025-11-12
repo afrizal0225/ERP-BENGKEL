@@ -25,12 +25,18 @@
                 <h5>Bulk Import Instructions</h5>
             </div>
             <div class="card-body">
+                <!-- Prominent Download Button -->
+                <div class="text-center mb-4">
+                    <a href="{% url 'download_bom_template' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-download"></i> Download Excel Template
+                    </a>
+                    <p class="text-muted mt-2">Download the template to get started with bulk BOM import</p>
+                </div>
+
                 <div class="alert alert-info">
                     <strong>How to import BOMs:</strong>
                     <ol>
-                        <li><a href="{% url 'download_bom_template' %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-download"></i> Download Excel Template
-                        </a></li>
+                        <li>Download the Excel template using the button above</li>
                         <li>Open the template and fill it with your BOM data</li>
                         <li>Save the file and upload it below</li>
                         <li>Review the import results and fix any errors</li>

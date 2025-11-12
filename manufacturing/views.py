@@ -683,69 +683,76 @@ def download_bom_template(request):
         messages.error(request, "openpyxl library is required for Excel export. Please install it.")
         return redirect('bill_of_materials_list')
 
-    # Create template DataFrame
-    template_data = {
-        'product_code': ['PROD001', 'PROD001', 'PROD001', 'PROD002', 'PROD002'],
-        'product_name': ['Sample Product 1', 'Sample Product 1', 'Sample Product 1', 'Sample Product 2', 'Sample Product 2'],
-        'bom_version': [1.0, 1.0, 1.0, 1.0, 1.0],
-        'material_code': ['MAT001', 'MAT002', 'MAT003', 'MAT004', 'MAT005'],
-        'material_name': ['Material 1', 'Material 2', 'Material 3', 'Material 4', 'Material 5'],
-        'quantity': [2.5, 1.0, 3.0, 1.5, 0.5],
-        'allocated_stages': ['gurat,assembly', 'press', 'finishing,gurat', 'assembly', 'gurat,press,finishing']
-    }
+    try:
+        # Create template DataFrame
+        template_data = {
+            'product_code': ['PROD001', 'PROD001', 'PROD001', 'PROD002', 'PROD002'],
+            'product_name': ['Sample Product 1', 'Sample Product 1', 'Sample Product 1', 'Sample Product 2', 'Sample Product 2'],
+            'bom_version': [1.0, 1.0, 1.0, 1.0, 1.0],
+            'material_code': ['MAT001', 'MAT002', 'MAT003', 'MAT004', 'MAT005'],
+            'material_name': ['Material 1', 'Material 2', 'Material 3', 'Material 4', 'Material 5'],
+            'quantity': [2.5, 1.0, 3.0, 1.5, 0.5],
+            'allocated_stages': ['gurat,assembly', 'press', 'finishing,gurat', 'assembly', 'gurat,press,finishing']
+        }
 
-    df = pd.DataFrame(template_data)
+        df = pd.DataFrame(template_data)
 
-    # Get actual products and materials from database
-    products = FinishedProduct.objects.filter(is_active=True).values('code', 'name').order_by('code')
-    materials = RawMaterial.objects.filter(is_active=True).values('code', 'name', 'unit', 'unit_price').order_by('code')
+        # Get actual products and materials from database
+        products = FinishedProduct.objects.filter(is_active=True).values('code', 'name').order_by('code')
+        materials = RawMaterial.objects.filter(is_active=True).values('code', 'name', 'unit', 'unit_price').order_by('code')
 
-    # Create Excel response
-    from django.http import HttpResponse
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="bom_import_template.xlsx"'
+        # Create Excel response
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="bom_import_template.xlsx"'
 
-    with pd.ExcelWriter(response, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='BOM_Import', index=False)
+        with pd.ExcelWriter(response, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='BOM_Import', index=False)
 
-        # Add products reference sheet
-        products_df = pd.DataFrame(list(products))
-        products_df.columns = ['Product Code', 'Product Name']
-        products_df.to_excel(writer, sheet_name='Available_Products', index=False)
+            # Add products reference sheet
+            products_df = pd.DataFrame(list(products))
+            products_df.columns = ['Product Code', 'Product Name']
+            products_df.to_excel(writer, sheet_name='Available_Products', index=False)
 
-        # Add materials reference sheet
-        materials_df = pd.DataFrame(list(materials))
-        materials_df.columns = ['Material Code', 'Material Name', 'Unit', 'Unit Price']
-        materials_df.to_excel(writer, sheet_name='Available_Materials', index=False)
+            # Add materials reference sheet
+            materials_df = pd.DataFrame(list(materials))
+            materials_df.columns = ['Material Code', 'Material Name', 'Unit', 'Unit Price']
+            materials_df.to_excel(writer, sheet_name='Available_Materials', index=False)
 
-        # Add instructions sheet
-        instructions_df = pd.DataFrame({
-            'Instructions': [
-                'Fill out this template to bulk import Bills of Materials (BOMs)',
-                '',
-                'REQUIRED COLUMNS:',
-                '• product_code: Code of the finished product (see Available_Products sheet)',
-                '• material_code: Code of the raw material (see Available_Materials sheet)',
-                '• quantity: Quantity of material needed (decimal allowed)',
-                '',
-                'OPTIONAL COLUMNS:',
-                '• product_name: Name of the product (for reference)',
-                '• bom_version: BOM version number (defaults to 1.0)',
-                '• material_name: Name of the material (for reference)',
-                '• allocated_stages: Production stages (comma-separated: gurat,assembly,press,finishing)',
-                '',
-                'NOTES:',
-                '• Each row represents one BOM item',
-                '• Multiple rows with same product_code + bom_version = one BOM with multiple items',
-                '• Existing BOMs will be updated (items replaced)',
-                '• allocated_stages can be: gurat, assembly, press, finishing (or combinations)',
-                '• Leave allocated_stages empty for no stage allocation',
-                '• Check Available_Products and Available_Materials sheets for valid codes'
-            ]
-        })
-        instructions_df.to_excel(writer, sheet_name='Instructions', index=False)
+            # Add instructions sheet
+            instructions_df = pd.DataFrame({
+                'Instructions': [
+                    'Fill out this template to bulk import Bills of Materials (BOMs)',
+                    '',
+                    'REQUIRED COLUMNS:',
+                    '• product_code: Code of the finished product (see Available_Products sheet)',
+                    '• material_code: Code of the raw material (see Available_Materials sheet)',
+                    '• quantity: Quantity of material needed (decimal allowed)',
+                    '',
+                    'OPTIONAL COLUMNS:',
+                    '• product_name: Name of the product (for reference)',
+                    '• bom_version: BOM version number (defaults to 1.0)',
+                    '• material_name: Name of the material (for reference)',
+                    '• allocated_stages: Production stages (comma-separated: gurat,assembly,press,finishing)',
+                    '',
+                    'NOTES:',
+                    '• Each row represents one BOM item',
+                    '• Multiple rows with same product_code + bom_version = one BOM with multiple items',
+                    '• Existing BOMs will be updated (items replaced)',
+                    '• allocated_stages can be: gurat, assembly, press, finishing (or combinations)',
+                    '• Leave allocated_stages empty for no stage allocation',
+                    '• Check Available_Products and Available_Materials sheets for valid codes'
+                ]
+            })
+            instructions_df.to_excel(writer, sheet_name='Instructions', index=False)
 
-    return response
+        return response
+    except Exception as e:
+        print(f"Error in download_bom_template: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, f"Error generating template: {str(e)}")
+        return redirect('bill_of_materials_list')
 
 
 @login_required
